@@ -1,0 +1,10 @@
+.title {
+	margin-bottom: 3em;
+}
+
+#game {
+	height: 500px;
+	width: 500px;
+	border: solid 1px black;
+	margin: 0 auto;
+}
