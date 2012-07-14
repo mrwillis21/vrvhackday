@@ -75,19 +75,21 @@ $(function () {
                 updatePlayerPosition(playerid, position.x, position.y, position.o);
             }
             for (var playerid in json.players) {
-                if( playerid === myId) {
-                    $('#score').append('<tr><td><font color="' + players[playerid].color + '">You</font></td><td>' + players[playerid].score + '</td></tr>');
+                var id = json.players[playerid].id;
+                if( id === myId) {
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">You</font></td><td>' + players[id].score + '</td></tr>');
                 }
             }
             //json.players.sort(sortPlayers);
             for (var playerid in json.players) {
-                if( playerid !== myId) {
-                    $('#score').append('<tr><td><font color="' + players[playerid].color + '">player</font></td><td>' + players[playerid].score + '</td></tr>');
+                var id = json.players[playerid].id;
+                if( id !== myId) {
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">player</font></td><td>' + players[id].score + '</td></tr>');
                 }
             }
             bullets = new Object();
-            for (var j = 0; j < json.bullets.length; j++) {
-                var position = json.bullets[j].position;
+            for (var bulletid in json.bullets) {
+                var position = json.bullets[bulletid].position;
                 updateBulletPosition(position.x, position.y);
             }
             status.text('Have fun!');
