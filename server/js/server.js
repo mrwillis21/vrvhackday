@@ -4,6 +4,7 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 
 var nextId = -1;
+var nextBulletId = -1;
 var clients = [];
 var bulletTimers = [];
 var bulletTimerIndex = 0;
@@ -45,7 +46,8 @@ function Position(x, y, o) {
     this.o = o
 }
 
-function Bullet(playerId, position) {
+function Bullet(id, playerId, position) {
+    this.id = id,
     this.playerId = playerId,
     this.position = position
     this.width = 2,
@@ -121,8 +123,9 @@ wsServer.on('request', function(request) {
                     var posY = player.position.y;
                     var o = player.position.o;
 
-                    var bullet = new Bullet(player.id, {"x" : posX, "y" : posY});
-                    var bulletIndex = boardState.bullets.push(bullet) - 1;
+                    nextBulletId++;
+                    var bullet = new Bullet(nextBulletId, player.id, {"x" : posX, "y" : posY});
+                    bullet.index = boardState.bullets.push(bullet) - 1;
                     var timer = setInterval(function() {
                         if(o === "L") {
                             bullet.position.x = bullet.position.x - moveIncrement;
@@ -139,7 +142,12 @@ wsServer.on('request', function(request) {
                         if (_isBulletOutOfBounds(bullet) || _isBulletHitSomeone(bullet)) {
                             clearInterval(timer);
                             timer = null;
-                            boardState.bullets.splice(bulletIndex, 1);
+                            for(var i = 1; i < boardState.bullets.length; ++i) {
+                                var theBullet = boardState.bullets[i];
+                                if(theBullet.id === bullet.id) {
+                                    boardState.bullets.splice(i, 1);
+                                }
+                            }
                             bullet = null;
                         }
                         _updateClients();
