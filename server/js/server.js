@@ -124,11 +124,11 @@ wsServer.on('request', function(request) {
                     var bulletIndex = boardState.bullets.push(bullet);
 
                     var timer = setInterval(function() {
-                        console.log("Moving bullet " + json.id);
                         bullet.position.x = bullet.position.x - moveIncrement;
                         _updateClients();
                         if (bullet.position.x < 0) {
                             clearInterval(timer);
+                            timer = null;
                         }
                     }, 100);
                 }
@@ -181,7 +181,6 @@ wsServer.on('request', function(request) {
                     return false;
                 }
             }
-            if(newX +)
         }
         return true;
     }
