@@ -10,14 +10,15 @@ var boardWidth = 500;
 var boardHeight = 500;
 var boardColor = "#FFFFFF";
 var maxPlayers = 10;
+var moveIncrement = 5;
 
 var boardState = new BoardState();
 
-function BoardInitializer(width, height, backgroundColor, maxPlayers) {
+function BoardInitializer(width, height, backgroundColor, moveIncrement) {
     this.width = width,
     this.height = height,
     this["background-color"] = backgroundColor,
-    this["max-players"] = maxPlayers
+    this["move-increment"] = moveIncrement;
 }
 
 function Connector(id, boardInitializer) {
@@ -30,7 +31,9 @@ function Player(id, color, position, orientation) {
     this.id = id,
     this.color = color,
     this.position = position,
-    this.orientation = orientation
+    this.orientation = orientation,
+    this.width = 10,
+    this.height = 10
 }
 
 function Position(x, y, o) {
@@ -74,7 +77,7 @@ wsServer.on('request', function(request) {
 
     console.log((new Date()) + ' Connection from origin ' + request.origin + '. Assigning ID: ' + nextId);
 
-    var boardInit = new BoardInitializer(boardWidth, boardHeight, boardColor, maxPlayers);
+    var boardInit = new BoardInitializer(boardWidth, boardHeight, boardColor, moveIncrement);
     var connectionData = new Connector(nextId, boardInit);
     
     // Send initializion message.
@@ -87,22 +90,22 @@ wsServer.on('request', function(request) {
     // all messages from users here.
     connection.on('message', function(message) {
         if (message.type === 'utf8') {
-            /*userName = request.origin;
-            // process WebSocket message
-            var obj = {
-                time: (new Date()).getTime(),
-                text: htmlEntities(message.utf8Data),
-                author: userName
+            var json = JSON.parse(message.utf8Data);
+            if(json.type === "move") {
+                for(var i = 0; i < boardState.players.length; i++) {
+                    if(json.id === boardState.players[i].id) {
+                        var newX = json["new-pos"].x
+                        var newY = json["new-pos"].y
+                        if(_isValidMove(boardState.players[i], newX, newY)) {
+                            boardState.players[i].position.x = newX;
+                            boardState.players[i].position.y = newY;
+                            boardState.players[i].position.o = json["new-pos"].o;
+                        }
+                    }
+                }
             }
-            messages.push(obj);
-            messages = messages.slice(-100);
-            
-            var json = JSON.stringify({ type: 'message', data: obj });
-            for (var i=0; i < clients.length; i++) {
-                clients[i].sendUTF(json);
-            }*/
+            _updateClients();
         }
-        console.log(message);
     });
 
     connection.on('close', function(connection) {
@@ -123,8 +126,8 @@ wsServer.on('request', function(request) {
 
     function _getRandomPosition() {
         // Change 200 to boardLeft + 1/2 of tank size
-        var x = Math.floor(Math.random()*200) + 200;
-        var y = Math.floor(Math.random()*200) + 200;
+        var x = (Math.floor(Math.random()*40) + 40) * moveIncrement;
+        var y = (Math.floor(Math.random()*40) + 40) * moveIncrement;
         var o = _getRandomOrientation();
         return new Position(x, y, o);
     }
@@ -136,5 +139,24 @@ wsServer.on('request', function(request) {
     function _getRandomOrientation() {
         var orientations = ["U", "D", "L", "R"];
         return orientations[Math.floor(Math.random()*orientations.length)];
+    }
+
+    // collision detection/bounds control
+    function _isValidMove(player, newX, newY) {
+        var players = boardState.players;
+        for(var i = 0; i < players.length; i++) {
+            var otherPlayer = players[i];
+            // Make sure I'm not comparing myself to... myself.
+            if(otherPlayer.id != player.id) {
+                var myLeft = newX - (player.width/2);
+                var myTop = newY - (player.height/2);
+                var otherLeft = otherPlayer.position.x - (otherPlayer.width/2);
+                var otherTop = otherPlayer.position.y - (otherPlayer.height/2);
+                if(myLeft >= otherLeft && myLeft <= (otherLeft+otherPlayer.width) && myTop >= otherTop && myTop <= (otherTop+otherPlayer.height)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 });
