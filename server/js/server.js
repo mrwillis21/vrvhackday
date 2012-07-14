@@ -6,6 +6,7 @@ var http = require('http');
 var nextId = -1;
 var clients = [];
 var bulletTimers = [];
+var bulletTimerIndex = 0;
 
 var boardWidth = 500;
 var boardHeight = 500;
@@ -122,10 +123,13 @@ wsServer.on('request', function(request) {
                     var bullet = new Bullet(player.id, {"x" : posX, "y" : posY});
                     var bulletIndex = boardState.bullets.push(bullet);
 
-                    setInterval(function() {
+                    var timer = setInterval(function() {
                         console.log("Moving bullet " + json.id);
                         bullet.position.x = bullet.position.x - moveIncrement;
                         _updateClients();
+                        if (bullet.position.x < 0) {
+                            clearInterval(timer);
+                        }
                     }, 100);
                 }
             }
@@ -177,6 +181,7 @@ wsServer.on('request', function(request) {
                     return false;
                 }
             }
+            if(newX +)
         }
         return true;
     }
