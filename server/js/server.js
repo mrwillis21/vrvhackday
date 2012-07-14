@@ -5,6 +5,7 @@ var http = require('http');
 
 var nextId = -1;
 var clients = [];
+var bulletTimers = [];
 
 var boardWidth = 500;
 var boardHeight = 500;
@@ -42,9 +43,17 @@ function Position(x, y, o) {
     this.o = o
 }
 
+function Bullet(playerId, position) {
+    this.playerId = playerId,
+    this.position = position
+    this.width = 2,
+    this.height = 2
+}
+
 function BoardState() {
     this.type = "update",
-    this.players = []
+    this.players = [],
+    this.bullets = []
 }
 
 /**
@@ -92,16 +101,32 @@ wsServer.on('request', function(request) {
         if (message.type === 'utf8') {
             var json = JSON.parse(message.utf8Data);
             if(json.type === "move") {
-                for(var i = 0; i < boardState.players.length; i++) {
-                    if(json.id === boardState.players[i].id) {
-                        var newX = json["new-pos"].x
-                        var newY = json["new-pos"].y
-                        if(_isValidMove(boardState.players[i], newX, newY)) {
-                            boardState.players[i].position.x = newX;
-                            boardState.players[i].position.y = newY;
-                            boardState.players[i].position.o = json["new-pos"].o;
-                        }
+                var player = _getPlayerByID(json.id);
+                if(player) {
+                    var newX = json["new-pos"].x
+                    var newY = json["new-pos"].y
+                    if(_isValidMove(player, newX, newY)) {
+                        player.position.x = newX;
+                        player.position.y = newY;
+                        player.position.o = json["new-pos"].o;
                     }
+                }
+            }
+            else if(json.type === "fire") {
+                var player = _getPlayerByID(json.id);
+                if(player) {
+                    var posX = player.position.x;
+                    var posY = player.position.y;
+                    var o = player.position.o;
+
+                    var bullet = new Bullet(player.id, {"x" : posX, "y" : posY});
+                    var bulletIndex = boardState.bullets.push(bullet);
+
+                    setInterval(function() {
+                        console.log("Moving bullet " + json.id);
+                        bullet.position.x = bullet.position.x - moveIncrement;
+                        _updateClients();
+                    }, 100);
                 }
             }
             _updateClients();
@@ -116,7 +141,7 @@ wsServer.on('request', function(request) {
             _updateClients();
     });
 
-    function _updateClients() {    
+    function _updateClients() {
         for(var i = 0; i < clients.length; ++i) {
             if(clients[i]) {
                 clients[i].sendUTF(JSON.stringify( boardState ));
@@ -148,15 +173,19 @@ wsServer.on('request', function(request) {
             var otherPlayer = players[i];
             // Make sure I'm not comparing myself to... myself.
             if(otherPlayer.id != player.id) {
-                var myLeft = newX - (player.width/2);
-                var myTop = newY - (player.height/2);
-                var otherLeft = otherPlayer.position.x - (otherPlayer.width/2);
-                var otherTop = otherPlayer.position.y - (otherPlayer.height/2);
-                if(myLeft >= otherLeft && myLeft <= (otherLeft+otherPlayer.width) && myTop >= otherTop && myTop <= (otherTop+otherPlayer.height)) {
+                if(Math.abs(otherPlayer.position.x - newX) <= 5 && Math.abs(otherPlayer.position.y - newY) <= 5) { // Fix magic numbers - what about different sized tanks?
                     return false;
                 }
             }
         }
         return true;
+    }
+
+    function _getPlayerByID(id) {
+        for(var i = 0; i < boardState.players.length; i++) {
+            if(boardState.players[i].id === id) {
+                return boardState.players[i];
+            }
+        }
     }
 });
