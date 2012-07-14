@@ -1,13 +1,21 @@
-.title {
-	margin-bottom: 3em;
-	text-align: center;
+body {
+	margin: 0px;
+	padding:0px;
 }
-
+#stage {
+	width: 1000px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-top:150px;
+	background: url("../img/page-background.png");
+	background-repeat:no-repeat;
+	background-position:50% 0; 
+}
 #game {
 	height: 500px;
 	width: 500px;
 	border: solid 1px black;
 	display: block;
 	margin: 0 auto;
-	background: url(../img/background.png);
+	background: url("../img/background.png");
 }

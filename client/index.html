@@ -5,14 +5,12 @@
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 	</head>
 	<body>
-		<h1 class="title">BaMF</h1>
-		<!-- Change this to a canvas later. -->
-		<center><div>
+		<div id="stage">
+			<canvas id="game" width="500" height="500">
+			    <p class="canvas-no-support">Your Browser Does Not Support HTML5 canvas!</p>
+			</canvas>
 			<span id="status">Connecting...</span>
-		</div></center>
-		<canvas id="game" width="500" height="500">
-		    <p class="canvas-no-support">Your Browser Does Not Support HTML5 canvas!</p>
-		</canvas>
+		</div>
 		<center><table id="score"></table></center>
 		<script src="js/client.js"></script>
 	</body>
