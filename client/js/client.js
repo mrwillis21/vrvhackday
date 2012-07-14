@@ -69,15 +69,20 @@ $(function () {
             grid.clearRect(0, 0, board.width, board.height);  
             $("#score").find("tr").remove();   
             players = new Object();
-            for (var i=0; i < json.players.length; i++) {
-                var id = json.players[i].id;
-                var position = json.players[i].position;
-                players[id] = json.players[i];
-                updatePlayerPosition(id, position.x, position.y, position.o);
-                if( id === myId) {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">You</font></td><td>' + players[id].score + '</td></tr>');
-                } else {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">player</font></td><td>' + players[id].score + '</td></tr>');
+            for (var playerid in json.players) {
+                var position = json.players[playerid].position;
+                players[playerid] = json.players[playerid];
+                updatePlayerPosition(playerid, position.x, position.y, position.o);
+            }
+            for (var playerid in json.players) {
+                if( playerid === myId) {
+                    $('#score').append('<tr><td><font color="' + players[playerid].color + '">You</font></td><td>' + players[playerid].score + '</td></tr>');
+                }
+            }
+            //json.players.sort(sortPlayers);
+            for (var playerid in json.players) {
+                if( playerid !== myId) {
+                    $('#score').append('<tr><td><font color="' + players[playerid].color + '">player</font></td><td>' + players[playerid].score + '</td></tr>');
                 }
             }
             bullets = new Object();
@@ -97,6 +102,10 @@ $(function () {
             addMessage(json.data.author, json.data.text, new Date(json.data.time));
         }
     };
+    
+    function sortPlayers(a, b){
+        return b.score - a.score;
+    }
     
     input.keydown(function(e) {
         if (e.keyCode === 13) {
