@@ -124,9 +124,20 @@ wsServer.on('request', function(request) {
                     var bulletIndex = boardState.bullets.push(bullet);
 
                     var timer = setInterval(function() {
-                        bullet.position.x = bullet.position.x - moveIncrement;
+                        if(o === "L") {
+                            bullet.position.x = bullet.position.x - moveIncrement;
+                        }
+                        else if(o === "R") {
+                            bullet.position.x = bullet.position.x + moveIncrement;
+                        }
+                        else if(o === "U") {
+                            bullet.position.y = bullet.position.y - moveIncrement;
+                        }
+                        else if(o === "D") {
+                            bullet.position.y = bullet.position.y + moveIncrement;
+                        }
                         _updateClients();
-                        if (bullet.position.x < 0) {
+                        if (bullet.position.x < 0 || bullet.position.x > boardInit.width || bullet.position.y < 0 || bullet.position.y > boardInit.height) {
                             clearInterval(timer);
                             timer = null;
                         }
