@@ -192,6 +192,9 @@ wsServer.on('request', function(request) {
                     return false;
                 }
             }
+            if(newX - 5 < 0 || newY - 5 < 0 || newX + 5 > boardinit.width || newY + 5 > boardinit.height) {
+                return false;
+            }
         }
         return true;
     }
