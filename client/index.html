@@ -7,11 +7,14 @@
 	<body>
 		<h1 class="title">BaMF</h1>
 		<!-- Change this to a canvas later. -->
-		<textarea id="game"></textarea>
+		<canvas id="game" width="500" height="500">
+		    <p class="canvas-no-support">Your Browser Does Not Support HTML5 canvas!</p>
+		</canvas>
 		<div>
 			<span id="status">Connecting...</span>
 		    <input type="text" id="input" disabled="disabled" />
 		</div>
+		<script src="js/three.js"></script>
 		<script src="js/client.js"></script>
 	</body>
 </html>
