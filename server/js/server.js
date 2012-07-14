@@ -65,22 +65,23 @@ var wsServer = new WebSocketServer({
 
 // WebSocket server
 wsServer.on('request', function(request) {
-    console.log((new Date()) + ' Connection from origin ' + request.origin + '.');
     var connection = request.accept(null, request.origin);
-    
     var index = clients.push(connection) - 1;
 
-    var player = new Player(index, _getRandomColor(), _getRandomPosition(), _getRandomOrientation());
+    nextId+=1;
+    var player = new Player(nextId, _getRandomColor(), _getRandomPosition(), _getRandomOrientation());
     boardState.players.push(player);
 
+    console.log((new Date()) + ' Connection from origin ' + request.origin + '. Assigning ID: ' + nextId);
+
     var boardInit = new BoardInitializer(boardWidth, boardHeight, boardColor, maxPlayers);
-    var connectionData = new Connector(index, boardInit);
+    var connectionData = new Connector(nextId, boardInit);
     
     // Send initializion message.
     connection.sendUTF(JSON.stringify( connectionData ));
 
     // Update board state for all players.
-    _updateBoard();
+    _updateClients();
 
     // This is the most important callback for us, we'll handle
     // all messages from users here.
@@ -101,14 +102,18 @@ wsServer.on('request', function(request) {
                 clients[i].sendUTF(json);
             }*/
         }
+        console.log(message);
     });
 
     connection.on('close', function(connection) {
             // remove user from the list of connected clients
-            clients[index] = null;
+            clients.splice(index, 1);
+            boardState.players.splice(index, 1);
+            console.log("Player " + nextId + " logged out.");
+            _updateClients();
     });
 
-    function _updateBoard() {    
+    function _updateClients() {    
         for(var i = 0; i < clients.length; ++i) {
             if(clients[i]) {
                 clients[i].sendUTF(JSON.stringify( boardState ));
@@ -130,6 +135,6 @@ wsServer.on('request', function(request) {
 
     function _getRandomOrientation() {
         var orientations = ["U", "D", "L", "R"];
-        return orientations[Math.floor(Math.random()*5)];
+        return orientations[Math.floor(Math.random()*orientations.length)];
     }
 });
