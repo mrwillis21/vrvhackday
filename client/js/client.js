@@ -162,7 +162,7 @@ $(function () {
             grid.fillRect(x,y-(squareSize/8),squareSize,squareSize/4);
         }
         if (id === myId) {
-            grid.fillStyle = 'black';
+            grid.fillStyle = 'white';
             grid.beginPath();
             grid.arc(x,y,2,0,Math.PI*2,true);
             grid.closePath();
