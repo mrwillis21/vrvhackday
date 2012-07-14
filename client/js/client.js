@@ -11,6 +11,7 @@ $(function () {
     var board = new Object();
     
     var players = new Object();
+    var bullets = new Object();
     
     var myId = -1;
     var myColor = "";
@@ -67,6 +68,11 @@ $(function () {
                 players[id] = json.players[i];
                 updatePlayerPosition(id, position.x, position.y, position.o);
             }
+            bullets = new Object();
+            for (var j = 0; j < json.bullets.length; j++) {
+                var position = json.bullets[j].position;
+                updateBulletPosition(position.x, position.y);
+            }
             status.text('Players initialized');
             started = true;
         } else if (json.type === 'messages') { // entire message history
@@ -117,6 +123,8 @@ $(function () {
                 players[myId].position.x = players[myId].position.x+board['move-increment'];
                 players[myId].position.o = "R";
                 sendPosition();
+            } else if (e.keyCode === 32) {
+                sendFire();
             }
         }
     });
@@ -138,6 +146,11 @@ $(function () {
     
     function sendPosition() {
         var jsonmsg = JSON.stringify( { type : 'move', id : myId, 'new-pos' : { 'x' : players[myId].position.x, 'y' : players[myId].position.y, 'o' : players[myId].position.o } } );
+        connection.send(jsonmsg);
+    }
+    
+    function sendFire() {
+        var jsonmsg = JSON.stringify( { type : 'fire', id : myId } );
         connection.send(jsonmsg);
     }
     
@@ -171,5 +184,13 @@ $(function () {
         players[id].position.x = x;
         players[id].position.y = y;
         players[id].position.o = o;
+    }
+    
+    function updateBulletPosition(x, y) {
+        grid.fillStyle = 'black';
+        grid.beginPath();
+        grid.arc(x,y,2,0,Math.PI*2,true);
+        grid.closePath();
+        grid.fill();
     }
 });
