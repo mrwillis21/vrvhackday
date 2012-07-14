@@ -4,6 +4,7 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 
 var nextId = -1;
+var nextBulletId = -1;
 var clients = {};
 
 var boardWidth = 500;
@@ -45,7 +46,8 @@ function Position(x, y, o) {
     this.o = o
 }
 
-function Bullet(playerId, position) {
+function Bullet(id, playerId, position) {
+    this.id = id;
     this.playerId = playerId,
     this.position = position
     this.width = 2,
@@ -98,8 +100,6 @@ wsServer.on('request', function(request) {
     // Update board state for all players.
     _updateClients();
 
-    var nextBulletId = -1;
-
     // This is the most important callback for us, we'll handle
     // all messages from users here.
     connection.on('message', function(message) {
@@ -140,8 +140,8 @@ wsServer.on('request', function(request) {
                         posY = player.position.y + playerHeight;
                     }
 
-                    nextBulletId++;
-                    var bullet = new Bullet(player.id, {"x" : posX, "y" : posY});
+                    ++nextBulletId;
+                    var bullet = new Bullet(nextBulletId, player.id, {"x" : posX, "y" : posY});
                     boardState.bullets[nextBulletId] = bullet;
                     
                     var timer = setInterval(function() {
@@ -159,7 +159,7 @@ wsServer.on('request', function(request) {
                         }
                         if (_isBulletOutOfBounds(bullet) || _isBulletHitSomeone(bullet)) {
                             clearInterval(timer);
-                            delete(boardState.bullets[nextBulletId]);
+                            delete(boardState.bullets[bullet.id]);
                         }
                         _updateClients();
                     }, 50);
