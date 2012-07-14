@@ -180,7 +180,6 @@ wsServer.on('request', function(request) {
     function _updateClients() {
         for(var key in clients) {
             if(clients[key]) {
-                console.log(boardState);
                 clients[key].sendUTF(JSON.stringify( boardState ));
             }
         }
