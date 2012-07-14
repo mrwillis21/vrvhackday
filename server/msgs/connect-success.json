@@ -1,47 +1,10 @@
 {
-	"type": "connectsuccess",
+	"type": "connect-success",
 	"yourid": 0,
 	"board": {
 		"width": 0,
 		"height": 0,
 		"background-color": "#RRGGBB",
 		"max-players": 0
-	},
-	"boardstate": {
-		"players": [
-			{
-				"id": 0,
-				"color": "#RRGGBB",
-				"score": 0,
-				"position": {
-					"x": 0,
-					"y": 0,
-					"o": "U|L|R|D"
-				},
-				"turret-o": "U|L|R|D"
-			},
-			{
-				"id": 0,
-				"color": "#RRGGBB",
-				"score": 0,
-				"position": {
-					"x": 0,
-					"y": 0,
-					"o": "U|L|R|D"
-				},
-				"turret-o": "U|L|R|D"
-			},
-			{
-				"id": 0,
-				"color": "#RRGGBB",
-				"score": 0,
-				"position": {
-					"x": 0,
-					"y": 0,
-					"o": "U|L|R|D"
-				},
-				"turret-o": "U|L|R|D"
-			}
-		]
 	}
 }
