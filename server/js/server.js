@@ -6,7 +6,6 @@ var http = require('http');
 var nextId = -1;
 var nextBulletId = -1;
 var clients = [];
-var bulletTimers = [];
 var bulletTimerIndex = 0;
 
 var boardWidth = 500;
@@ -14,6 +13,8 @@ var boardHeight = 500;
 var boardColor = "#FFFFFF";
 var maxPlayers = 10;
 var moveIncrement = 5;
+var playerWidth = 10;
+var playerHeight = 10;
 
 var boardState = new BoardState();
 
@@ -35,8 +36,8 @@ function Player(id, color, position, orientation) {
     this.color = color,
     this.position = position,
     this.orientation = orientation,
-    this.width = 10,
-    this.height = 10
+    this.width = playerWidth,
+    this.height = playerHeight,
     this.score = 0;
 }
 
@@ -119,9 +120,25 @@ wsServer.on('request', function(request) {
             else if(json.type === "fire") {
                 var player = _getPlayerByID(json.id);
                 if(player) {
-                    var posX = player.position.x;
-                    var posY = player.position.y;
+                    var posX, posY;
                     var o = player.position.o;
+
+                    if(o === "L") {
+                        posX = player.position.x - playerWidth;
+                        posY = player.position.y;
+                    }
+                    else if(o === "R") {
+                        posX = player.position.x + playerWidth;
+                        posY = player.position.y;
+                    }
+                    else if(o === "U") {
+                        posX = player.position.x;
+                        posY = player.position.y - playerHeight;
+                    }
+                    else if(o === "D") {
+                        posX = player.position.x;
+                        posY = player.position.y + playerHeight;
+                    }
 
                     nextBulletId++;
                     var bullet = new Bullet(nextBulletId, player.id, {"x" : posX, "y" : posY});
@@ -141,17 +158,15 @@ wsServer.on('request', function(request) {
                         }
                         if (_isBulletOutOfBounds(bullet) || _isBulletHitSomeone(bullet)) {
                             clearInterval(timer);
-                            timer = null;
                             for(var i = 1; i < boardState.bullets.length; ++i) {
                                 var theBullet = boardState.bullets[i];
                                 if(theBullet.id === bullet.id) {
                                     boardState.bullets.splice(i, 1);
                                 }
                             }
-                            bullet = null;
                         }
                         _updateClients();
-                    }, 75);
+                    }, 50);
                 }
             }
             _updateClients();
