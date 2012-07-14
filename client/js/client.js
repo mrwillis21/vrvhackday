@@ -18,6 +18,7 @@ $(function () {
     var myColor = "";
     
     var squareSize = 10;
+    var maxHealth = 10;
     
     var started = false;
     
@@ -58,6 +59,7 @@ $(function () {
             
             // Setup board
             board = json.board;
+            maxHealth = board.maxHealth;
             grid_canvas.width = board.width;
             grid_canvas.height = board.height;
             grid.clearRect(0, 0, board.width, board.height);
@@ -74,17 +76,17 @@ $(function () {
                 players[playerid] = json.players[playerid];
                 updatePlayerPosition(players[playerid].id, position.x, position.y, position.o);
             }
+            $('#score').append('<tr><td>Name</td><td>Score</td><td>Health</td></tr>');
             for (var playerid in json.players) {
                 var id = json.players[playerid].id;
                 if( id === myId) {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">You</font></td><td>' + players[id].score + '</td></tr>');
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">You</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
                 }
             }
-            //json.players.sort(sortPlayers);
             for (var playerid in json.players) {
                 var id = json.players[playerid].id;
                 if( id !== myId) {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">player</font></td><td>' + players[id].score + '</td></tr>');
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">player</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
                 }
             }
             bullets = new Object();
@@ -104,10 +106,6 @@ $(function () {
             addMessage(json.data.author, json.data.text, new Date(json.data.time));
         }
     };
-    
-    function sortPlayers(a, b){
-        return b.score - a.score;
-    }
     
     input.keydown(function(e) {
         if (e.keyCode === 13) {
@@ -209,7 +207,6 @@ $(function () {
     
     function updatePlayerPosition(id, x, y, o) {
         var oldPosition = players[id].position;
-        //grid.clearRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
         grid.fillStyle = board['background-color'];
         grid.fillRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
         grid.fillStyle = players[id].color;
@@ -234,6 +231,8 @@ $(function () {
             grid.closePath();
             grid.fill();
         }
+        grid.fillStyle = 'red';
+        grid.fillRect(x-(squareSize/2), y-(squareSize/2)-1, squareSize*(players[id].hp/maxHealth), 1);
         players[id].position.x = x;
         players[id].position.y = y;
         players[id].position.o = o;
