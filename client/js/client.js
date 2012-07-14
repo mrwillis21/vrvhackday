@@ -4,6 +4,7 @@ $(function () {
     var game = $('#game');
     var input = $('#input');
     var status = $('#status');
+    var score = $('#score');
     
     var grid_canvas = document.getElementById("game");
     var grid = grid_canvas.getContext("2d");
@@ -22,6 +23,8 @@ $(function () {
     
     var acceptFire = true;
     var acceptPosition = true;
+    var movementSpeed = 100;
+    var bulletRate = 500;
     
     // if user is running mozilla then use it's built-in WebSocket
     window.WebSocket = window.WebSocket || window.MozWebSocket;
@@ -63,20 +66,26 @@ $(function () {
             status.text('Board initialized');
         } else if (json.type === 'update') {
             // Add players
-            grid.clearRect(0, 0, board.width, board.height);     
+            grid.clearRect(0, 0, board.width, board.height);  
+            $("#score").find("tr").remove();   
             players = new Object();
             for (var i=0; i < json.players.length; i++) {
                 var id = json.players[i].id;
                 var position = json.players[i].position;
                 players[id] = json.players[i];
                 updatePlayerPosition(id, position.x, position.y, position.o);
+                if( id === myId) {
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">You</font></td><td>' + players[id].score + '</td></tr>');
+                } else {
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">player</font></td><td>' + players[id].score + '</td></tr>');
+                }
             }
             bullets = new Object();
             for (var j = 0; j < json.bullets.length; j++) {
                 var position = json.bullets[j].position;
                 updateBulletPosition(position.x, position.y);
             }
-            status.text('Players initialized');
+            status.text('Have fun!');
             started = true;
         } else if (json.type === 'messages') { // entire message history
             // insert every single message to the chat window
@@ -115,7 +124,7 @@ $(function () {
                     acceptPosition = false;
                     setTimeout(function() {
                         acceptPosition = true;
-                    }, 200);
+                    }, movementSpeed);
                 }
             } else if (e.keyCode === 40) {
                 // DOWN
@@ -126,7 +135,7 @@ $(function () {
                     acceptPosition = false;
                     setTimeout(function() {
                         acceptPosition = true;
-                    }, 200);
+                    }, movementSpeed);
                 }
             } else if (e.keyCode === 37) {
                 // LEFT
@@ -137,7 +146,7 @@ $(function () {
                     acceptPosition = false;
                     setTimeout(function() {
                         acceptPosition = true;
-                    }, 200);
+                    }, movementSpeed);
                 }
             } else if (e.keyCode === 39) {
                 // RIGHT
@@ -148,7 +157,7 @@ $(function () {
                     acceptPosition = false;
                     setTimeout(function() {
                         acceptPosition = true;
-                    }, 200);
+                    }, movementSpeed);
                 }
             } else if (e.keyCode === 32) {
                 sendFire();
@@ -183,7 +192,7 @@ $(function () {
             acceptFire = false;
             setTimeout(function() {
                 acceptFire = true;
-            }, 500);
+            }, bulletRate);
         }
     }
     

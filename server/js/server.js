@@ -36,6 +36,7 @@ function Player(id, color, position, orientation) {
     this.orientation = orientation,
     this.width = 10,
     this.height = 10
+    this.score = 0;
 }
 
 function Position(x, y, o) {
@@ -109,8 +110,8 @@ wsServer.on('request', function(request) {
                     if(_isValidMove(player, newX, newY)) {
                         player.position.x = newX;
                         player.position.y = newY;
-                        player.position.o = json["new-pos"].o;
                     }
+                    player.position.o = json["new-pos"].o;
                 }
             }
             else if(json.type === "fire") {
@@ -121,8 +122,7 @@ wsServer.on('request', function(request) {
                     var o = player.position.o;
 
                     var bullet = new Bullet(player.id, {"x" : posX, "y" : posY});
-                    var bulletIndex = boardState.bullets.push(bullet);
-
+                    var bulletIndex = boardState.bullets.push(bullet) - 1;
                     var timer = setInterval(function() {
                         if(o === "L") {
                             bullet.position.x = bullet.position.x - moveIncrement;
@@ -136,12 +136,14 @@ wsServer.on('request', function(request) {
                         else if(o === "D") {
                             bullet.position.y = bullet.position.y + moveIncrement;
                         }
-                        _updateClients();
-                        if (bullet.position.x < 0 || bullet.position.x > boardInit.width || bullet.position.y < 0 || bullet.position.y > boardInit.height) {
+                        if (_isBulletOutOfBounds(bullet) || _isBulletHitSomeone(bullet)) {
                             clearInterval(timer);
                             timer = null;
+                            boardState.bullets.splice(bulletIndex, 1);
+                            bullet = null;
                         }
-                    }, 100);
+                        _updateClients();
+                    }, 75);
                 }
             }
             _updateClients();
@@ -192,7 +194,7 @@ wsServer.on('request', function(request) {
                     return false;
                 }
             }
-            if(newX - 5 < 0 || newY - 5 < 0 || newX + 5 > boardinit.width || newY + 5 > boardinit.height) {
+            if(newX - 5 < 0 || newY - 5 < 0 || newX + 5 > boardInit.width || newY + 5 > boardInit.height) {
                 return false;
             }
         }
@@ -205,5 +207,28 @@ wsServer.on('request', function(request) {
                 return boardState.players[i];
             }
         }
+    }
+
+    function _isBulletOutOfBounds(bullet) {
+        return bullet.position.x < 0 || bullet.position.x > boardInit.width || bullet.position.y < 0 || bullet.position.y > boardInit.height
+    }
+
+    function _isBulletHitSomeone(bullet) {
+        var players = boardState.players;
+        for(var i = 0; i < players.length; i++) {
+            if(bullet.playerId !== players[i].id) {
+                if(Math.abs(bullet.position.x - players[i].position.x) <= 5 && Math.abs(bullet.position.y - players[i].position.y) <= 5) { // Fix magic numbers - what about different sized tanks?
+                    // Increment shooter's score.
+                    var shooter = _getPlayerByID(bullet.playerId);
+                    if(shooter) {
+                        shooter.score++;
+                    }
+                    // Reset person who got hit.
+                    players[i].position = _getRandomPosition();
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 });
