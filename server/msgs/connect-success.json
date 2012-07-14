@@ -12,6 +12,7 @@
 			{
 				"id": 0,
 				"color": "#RRGGBB",
+				"score": 0,
 				"position": {
 					"x": 0,
 					"y": 0,
@@ -22,6 +23,7 @@
 			{
 				"id": 0,
 				"color": "#RRGGBB",
+				"score": 0,
 				"position": {
 					"x": 0,
 					"y": 0,
@@ -32,6 +34,7 @@
 			{
 				"id": 0,
 				"color": "#RRGGBB",
+				"score": 0,
 				"position": {
 					"x": 0,
 					"y": 0,
