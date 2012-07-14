@@ -80,7 +80,7 @@ $(function () {
             for (var playerid in json.players) {
                 var id = json.players[playerid].id;
                 if( id === myId) {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">You</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">' + players[id].name + '</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
                 }
             }
             for (var playerid in json.players) {
@@ -119,6 +119,8 @@ $(function () {
             connection.send(jsonmsg);
             
             $(this).val('');
+            input.attr('style', 'visibility:hidden');
+            $('#name').attr('style', 'visibility:hidden');
         }
     });
     

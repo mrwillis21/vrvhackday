@@ -5,22 +5,22 @@
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 	</head>
 	<body>
-		<h1 class="title">BaMF</h1>
-		<!-- Change this to a canvas later. -->
-		<center><input type="text" id="input" disabled="disabled" /></center>
-		<center><div>
-			<span id="status">Connecting...</span>
-		</div></center>
-		<center><table><tr><td width="20%">
-			<center><table id="score"></table></center>
-		</td><td width="80%"><center>
-		<canvas id="game" width="500" height="500">
-		    <p class="canvas-no-support">Your Browser Does Not Support HTML5 canvas!</p>
-		</canvas></center>
-		</td></tr></table></center>
+		<div id="stage">
+			<div id="holder">
+
+				<div id="leader">
+					<div id='name'>Set Name (hit enter):</div><input type="text" id="input" style="visibility:visible"/>
+					<table id="score"></table>
+				</div>
+				
+				<canvas id="game" width="500" height="500">
+				    <p class="canvas-no-support">Your Browser Does Not Support HTML5 canvas!</p>
+				</canvas>
+				<span id="status">Connecting...</span>
+			</div>
+		</div>
 		<script src="js/client.js"></script>
 		<audio id="pew">
    			<source src="./res/pew.mp3" type='audio/mpeg; codecs="mp3"'>
 		</audio>
 	</body>
-</html>
