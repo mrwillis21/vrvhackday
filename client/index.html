@@ -6,12 +6,18 @@
 	</head>
 	<body>
 		<div id="stage">
-			<canvas id="game" width="500" height="500">
-			    <p class="canvas-no-support">Your Browser Does Not Support HTML5 canvas!</p>
-			</canvas>
-			<span id="status">Connecting...</span>
+			<div id="holder">
+
+				<div id="leader">
+					<div id='name'>Set Name (hit enter):</div><input type="text" id="input" style="visibility:visible"/>
+					<table id="score"></table>
+				</div>
+				
+				<canvas id="game" width="500" height="500">
+				    <p class="canvas-no-support">Your Browser Does Not Support HTML5 canvas!</p>
+				</canvas>
+				<span id="status">Connecting...</span>
+			</div>
 		</div>
-		<center><table id="score"></table></center>
 		<script src="js/client.js"></script>
 	</body>
-</html>

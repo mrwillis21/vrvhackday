@@ -18,6 +18,7 @@ $(function () {
     var myColor = "";
     
     var squareSize = 10;
+    var maxHealth = 10;
     
     var started = false;
     
@@ -58,6 +59,7 @@ $(function () {
             
             // Setup board
             board = json.board;
+            maxHealth = board.maxHealth;
             grid_canvas.width = board.width;
             grid_canvas.height = board.height;
             grid.clearRect(0, 0, board.width, board.height);
@@ -69,20 +71,27 @@ $(function () {
             grid.clearRect(0, 0, board.width, board.height);  
             $("#score").find("tr").remove();   
             players = new Object();
-            for (var i=0; i < json.players.length; i++) {
-                var id = json.players[i].id;
-                var position = json.players[i].position;
-                players[id] = json.players[i];
-                updatePlayerPosition(id, position.x, position.y, position.o);
+            for (var playerid in json.players) {
+                var position = json.players[playerid].position;
+                players[playerid] = json.players[playerid];
+                updatePlayerPosition(players[playerid].id, position.x, position.y, position.o);
+            }
+            $('#score').append('<tr><td>Name</td><td>Score</td><td>Health</td></tr>');
+            for (var playerid in json.players) {
+                var id = json.players[playerid].id;
                 if( id === myId) {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">You</font></td><td>' + players[id].score + '</td></tr>');
-                } else {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">player</font></td><td>' + players[id].score + '</td></tr>');
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">' + players[id].name + '</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
+                }
+            }
+            for (var playerid in json.players) {
+                var id = json.players[playerid].id;
+                if( id !== myId) {
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">' + players[id].name + '</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
                 }
             }
             bullets = new Object();
-            for (var j = 0; j < json.bullets.length; j++) {
-                var position = json.bullets[j].position;
+            for (var bulletid in json.bullets) {
+                var position = json.bullets[bulletid].position;
                 updateBulletPosition(position.x, position.y);
             }
             status.text('Have fun!');
@@ -104,12 +113,14 @@ $(function () {
             if (!msg) {
                 return;
             }
+            
+            var jsonmsg = JSON.stringify( { type : 'changeusername', id : myId, name : msg } );
             // send the message as an ordinary text
-            connection.send(msg);
+            connection.send(jsonmsg);
+            
             $(this).val('');
-            // disable the input field to make the user wait until server
-            // sends back response
-            input.attr('disabled', 'disabled');
+            input.attr('style', 'visibility:hidden');
+            $('#name').attr('style', 'visibility:hidden');
         }
     });
     
@@ -198,7 +209,6 @@ $(function () {
     
     function updatePlayerPosition(id, x, y, o) {
         var oldPosition = players[id].position;
-        //grid.clearRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
         grid.fillStyle = board['background-color'];
         grid.fillRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
         grid.fillStyle = players[id].color;
@@ -223,6 +233,8 @@ $(function () {
             grid.closePath();
             grid.fill();
         }
+        grid.fillStyle = 'red';
+        grid.fillRect(x-(squareSize/2), y-(squareSize/2)-1, squareSize*(players[id].hp/maxHealth), 1);
         players[id].position.x = x;
         players[id].position.y = y;
         players[id].position.o = o;
