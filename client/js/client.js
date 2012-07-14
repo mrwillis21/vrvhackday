@@ -22,6 +22,8 @@ $(function () {
     
     var acceptFire = true;
     var acceptPosition = true;
+    var movementSpeed = 100;
+    var bulletRate = 500;
     
     // if user is running mozilla then use it's built-in WebSocket
     window.WebSocket = window.WebSocket || window.MozWebSocket;
@@ -115,7 +117,7 @@ $(function () {
                     acceptPosition = false;
                     setTimeout(function() {
                         acceptPosition = true;
-                    }, 200);
+                    }, movementSpeed);
                 }
             } else if (e.keyCode === 40) {
                 // DOWN
@@ -126,7 +128,7 @@ $(function () {
                     acceptPosition = false;
                     setTimeout(function() {
                         acceptPosition = true;
-                    }, 200);
+                    }, movementSpeed);
                 }
             } else if (e.keyCode === 37) {
                 // LEFT
@@ -137,7 +139,7 @@ $(function () {
                     acceptPosition = false;
                     setTimeout(function() {
                         acceptPosition = true;
-                    }, 200);
+                    }, movementSpeed);
                 }
             } else if (e.keyCode === 39) {
                 // RIGHT
@@ -148,7 +150,7 @@ $(function () {
                     acceptPosition = false;
                     setTimeout(function() {
                         acceptPosition = true;
-                    }, 200);
+                    }, movementSpeed);
                 }
             } else if (e.keyCode === 32) {
                 sendFire();
@@ -183,7 +185,7 @@ $(function () {
             acceptFire = false;
             setTimeout(function() {
                 acceptFire = true;
-            }, 500);
+            }, bulletRate);
         }
     }
     
