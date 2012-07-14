@@ -72,7 +72,7 @@ $(function () {
             for (var playerid in json.players) {
                 var position = json.players[playerid].position;
                 players[playerid] = json.players[playerid];
-                updatePlayerPosition(playerid, position.x, position.y, position.o);
+                updatePlayerPosition(players[playerid].id, position.x, position.y, position.o);
             }
             for (var playerid in json.players) {
                 var id = json.players[playerid].id;
