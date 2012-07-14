@@ -11,7 +11,6 @@ $(function () {
     var board = new Object();
     
     var players = new Object();
-    var bullets = new Object();
     
     var myId = -1;
     var myColor = "";
@@ -19,9 +18,6 @@ $(function () {
     var squareSize = 10;
     
     var started = false;
-    
-    var acceptFire = true;
-    var acceptPosition = true;
     
     // if user is running mozilla then use it's built-in WebSocket
     window.WebSocket = window.WebSocket || window.MozWebSocket;
@@ -69,12 +65,7 @@ $(function () {
                 var id = json.players[i].id;
                 var position = json.players[i].position;
                 players[id] = json.players[i];
-                updatePlayerPosition(id, position.x, position.y, position.o);
-            }
-            bullets = new Object();
-            for (var j = 0; j < json.bullets.length; j++) {
-                var position = json.bullets[j].position;
-                updateBulletPosition(position.x, position.y);
+                updatePlayerPosition(id, position.x, position.y);
             }
             status.text('Players initialized');
             started = true;
@@ -108,50 +99,28 @@ $(function () {
         if (started === true) {
             if (e.keyCode === 38) {
                 // UP
-                if (acceptPosition) {
-                    players[myId].position.y = players[myId].position.y-board['move-increment'];
-                    players[myId].position.o = "U";
-                    sendPosition();
-                    acceptPosition = false;
-                    setTimeout(function() {
-                        acceptPosition = true;
-                    }, 200);
-                }
+                var position = players[myId].position;
+                updatePlayerPosition(myId, position.x, position.y-board['move-increment']);
+                players[myId].position.o = "U";
+                sendPosition();
             } else if (e.keyCode === 40) {
                 // DOWN
-                if (acceptPosition) {
-                    players[myId].position.y = players[myId].position.y+board['move-increment'];
-                    players[myId].position.o = "D";
-                    sendPosition();
-                    acceptPosition = false;
-                    setTimeout(function() {
-                        acceptPosition = true;
-                    }, 200);
-                }
+                var position = players[myId].position;
+                updatePlayerPosition(myId, position.x, position.y+board['move-increment']);
+                players[myId].position.o = "D";
+                sendPosition();
             } else if (e.keyCode === 37) {
                 // LEFT
-                if (acceptPosition) {
-                    players[myId].position.x = players[myId].position.x-board['move-increment'];
-                    players[myId].position.o = "L";
-                    sendPosition();
-                    acceptPosition = false;
-                    setTimeout(function() {
-                        acceptPosition = true;
-                    }, 200);
-                }
+                var position = players[myId].position;
+                updatePlayerPosition(myId, position.x-board['move-increment'], position.y);
+                players[myId].position.o = "L";
+                sendPosition();
             } else if (e.keyCode === 39) {
                 // RIGHT
-                if (acceptPosition) {
-                    players[myId].position.x = players[myId].position.x+board['move-increment'];
-                    players[myId].position.o = "R";
-                    sendPosition();
-                    acceptPosition = false;
-                    setTimeout(function() {
-                        acceptPosition = true;
-                    }, 200);
-                }
-            } else if (e.keyCode === 32) {
-                sendFire();
+                var position = players[myId].position;
+                updatePlayerPosition(myId, position.x+board['move-increment'], position.y);
+                players[myId].position.o = "R";
+                sendPosition();
             }
         }
     });
@@ -176,54 +145,14 @@ $(function () {
         connection.send(jsonmsg);
     }
     
-    function sendFire() {
-        if (acceptFire) {
-            var jsonmsg = JSON.stringify( { type : 'fire', id : myId } );
-            connection.send(jsonmsg);
-            acceptFire = false;
-            setTimeout(function() {
-                acceptFire = true;
-            }, 500);
-        }
-    }
-    
-    function updatePlayerPosition(id, x, y, o) {
+    function updatePlayerPosition(id, x, y) {
         var oldPosition = players[id].position;
-        //grid.clearRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
+        grid.clearRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
         grid.fillStyle = board['background-color'];
         grid.fillRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
         grid.fillStyle = players[id].color;
         grid.fillRect(x-(squareSize/2),y-(squareSize/2),squareSize,squareSize);
-        if (o == "U") {
-            grid.fillStyle = 'black';
-            grid.fillRect(x-(squareSize/8),y-squareSize,squareSize/4,squareSize);
-        } else if (o == "D") {
-            grid.fillStyle = 'black';
-            grid.fillRect(x-(squareSize/8),y,squareSize/4,squareSize);
-        } else if (o == "L") {
-            grid.fillStyle = 'black';
-            grid.fillRect(x-squareSize,y-(squareSize/8),squareSize,squareSize/4);
-        } else if (o == "R") {
-            grid.fillStyle = 'black';
-            grid.fillRect(x,y-(squareSize/8),squareSize,squareSize/4);
-        }
-        if (id === myId) {
-            grid.fillStyle = 'white';
-            grid.beginPath();
-            grid.arc(x,y,2,0,Math.PI*2,true);
-            grid.closePath();
-            grid.fill();
-        }
         players[id].position.x = x;
         players[id].position.y = y;
-        players[id].position.o = o;
-    }
-    
-    function updateBulletPosition(x, y) {
-        grid.fillStyle = 'black';
-        grid.beginPath();
-        grid.arc(x,y,2,0,Math.PI*2,true);
-        grid.closePath();
-        grid.fill();
     }
 });
