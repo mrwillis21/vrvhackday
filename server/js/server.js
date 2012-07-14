@@ -4,9 +4,7 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 
 var nextId = -1;
-var nextBulletId = -1;
-var clients = [];
-var bulletTimerIndex = 0;
+var clients = {};
 
 var boardWidth = 500;
 var boardHeight = 500;
@@ -47,8 +45,7 @@ function Position(x, y, o) {
     this.o = o
 }
 
-function Bullet(id, playerId, position) {
-    this.id = id,
+function Bullet(playerId, position) {
     this.playerId = playerId,
     this.position = position
     this.width = 2,
@@ -57,8 +54,8 @@ function Bullet(id, playerId, position) {
 
 function BoardState() {
     this.type = "update",
-    this.players = [],
-    this.bullets = []
+    this.players = {},
+    this.bullets = {}
 }
 
 /**
@@ -83,22 +80,25 @@ var wsServer = new WebSocketServer({
 // WebSocket server
 wsServer.on('request', function(request) {
     var connection = request.accept(null, request.origin);
-    var index = clients.push(connection) - 1;
+    
+    var requestIndex = ++nextId;
+    clients[requestIndex] = connection;
 
-    nextId+=1;
-    var player = new Player(nextId, _getRandomColor(), _getRandomPosition(), _getRandomOrientation());
-    boardState.players.push(player);
+    var player = new Player(requestIndex, _getRandomColor(), _getRandomPosition(), _getRandomOrientation());
+    boardState.players[requestIndex] = player;
 
-    console.log((new Date()) + ' Connection from origin ' + request.origin + '. Assigning ID: ' + nextId);
+    console.log((new Date()) + ' Connection from origin ' + request.origin + '. Assigning ID: ' + requestIndex);
 
     var boardInit = new BoardInitializer(boardWidth, boardHeight, boardColor, moveIncrement);
-    var connectionData = new Connector(nextId, boardInit);
-    
+    var connectionData = new Connector(requestIndex, boardInit);
+
     // Send initializion message.
     connection.sendUTF(JSON.stringify( connectionData ));
 
     // Update board state for all players.
     _updateClients();
+
+    var nextBulletId = -1;
 
     // This is the most important callback for us, we'll handle
     // all messages from users here.
@@ -106,7 +106,7 @@ wsServer.on('request', function(request) {
         if (message.type === 'utf8') {
             var json = JSON.parse(message.utf8Data);
             if(json.type === "move") {
-                var player = _getPlayerByID(json.id);
+                var player = boardState.players[json.id];
                 if(player) {
                     var newX = json["new-pos"].x
                     var newY = json["new-pos"].y
@@ -118,7 +118,7 @@ wsServer.on('request', function(request) {
                 }
             }
             else if(json.type === "fire") {
-                var player = _getPlayerByID(json.id);
+                var player = boardState.players[json.id];
                 if(player) {
                     var posX, posY;
                     var o = player.position.o;
@@ -141,8 +141,9 @@ wsServer.on('request', function(request) {
                     }
 
                     nextBulletId++;
-                    var bullet = new Bullet(nextBulletId, player.id, {"x" : posX, "y" : posY});
-                    bullet.index = boardState.bullets.push(bullet) - 1;
+                    var bullet = new Bullet(player.id, {"x" : posX, "y" : posY});
+                    boardState.bullets[nextBulletId] = bullet;
+                    
                     var timer = setInterval(function() {
                         if(o === "L") {
                             bullet.position.x = bullet.position.x - moveIncrement;
@@ -158,12 +159,7 @@ wsServer.on('request', function(request) {
                         }
                         if (_isBulletOutOfBounds(bullet) || _isBulletHitSomeone(bullet)) {
                             clearInterval(timer);
-                            for(var i = 1; i < boardState.bullets.length; ++i) {
-                                var theBullet = boardState.bullets[i];
-                                if(theBullet.id === bullet.id) {
-                                    boardState.bullets.splice(i, 1);
-                                }
-                            }
+                            delete(boardState.bullets[nextBulletId]);
                         }
                         _updateClients();
                     }, 50);
@@ -175,16 +171,17 @@ wsServer.on('request', function(request) {
 
     connection.on('close', function(connection) {
             // remove user from the list of connected clients
-            clients.splice(index, 1);
-            boardState.players.splice(index, 1);
-            console.log("Player " + nextId + " logged out.");
+            delete(clients[requestIndex]);
+            delete(boardState.players[requestIndex]);
+            console.log("Player " + requestIndex + " logged out.");
             _updateClients();
     });
 
     function _updateClients() {
-        for(var i = 0; i < clients.length; ++i) {
-            if(clients[i]) {
-                clients[i].sendUTF(JSON.stringify( boardState ));
+        for(var key in clients) {
+            if(clients[key]) {
+                console.log(boardState);
+                clients[key].sendUTF(JSON.stringify( boardState ));
             }
         }
     }
@@ -209,8 +206,8 @@ wsServer.on('request', function(request) {
     // collision detection/bounds control
     function _isValidMove(player, newX, newY) {
         var players = boardState.players;
-        for(var i = 0; i < players.length; i++) {
-            var otherPlayer = players[i];
+        for(var playerId in players) {
+            var otherPlayer = players[playerId];
             // Make sure I'm not comparing myself to... myself.
             if(otherPlayer.id != player.id) {
                 if(Math.abs(otherPlayer.position.x - newX) <= 5 && Math.abs(otherPlayer.position.y - newY) <= 5) { // Fix magic numbers - what about different sized tanks?
@@ -224,30 +221,22 @@ wsServer.on('request', function(request) {
         return true;
     }
 
-    function _getPlayerByID(id) {
-        for(var i = 0; i < boardState.players.length; i++) {
-            if(boardState.players[i].id === id) {
-                return boardState.players[i];
-            }
-        }
-    }
-
     function _isBulletOutOfBounds(bullet) {
         return bullet.position.x < 0 || bullet.position.x > boardInit.width || bullet.position.y < 0 || bullet.position.y > boardInit.height
     }
 
     function _isBulletHitSomeone(bullet) {
         var players = boardState.players;
-        for(var i = 0; i < players.length; i++) {
-            if(bullet.playerId !== players[i].id) {
-                if(Math.abs(bullet.position.x - players[i].position.x) <= 5 && Math.abs(bullet.position.y - players[i].position.y) <= 5) { // Fix magic numbers - what about different sized tanks?
+        for(var key in players) {
+            if(bullet.playerId !== players[key].id) {
+                if(Math.abs(bullet.position.x - players[key].position.x) <= 5 && Math.abs(bullet.position.y - players[key].position.y) <= 5) { // Fix magic numbers - what about different sized tanks?
                     // Increment shooter's score.
-                    var shooter = _getPlayerByID(bullet.playerId);
+                    var shooter = players[bullet.playerId];
                     if(shooter) {
                         shooter.score++;
                     }
                     // Reset person who got hit.
-                    players[i].position = _getRandomPosition();
+                    players[key].position = _getRandomPosition();
                     return true;
                 }
             }
