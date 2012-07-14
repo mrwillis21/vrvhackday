@@ -14,6 +14,7 @@ var maxPlayers = 10;
 var moveIncrement = 5;
 var playerWidth = 10;
 var playerHeight = 10;
+var playerHealth = 3;
 
 var boardState = new BoardState();
 
@@ -22,6 +23,7 @@ function BoardInitializer(width, height, backgroundColor, moveIncrement) {
     this.height = height,
     this["background-color"] = backgroundColor,
     this["move-increment"] = moveIncrement;
+    this.maxHealth = playerHealth;
 }
 
 function Connector(id, boardInitializer) {
@@ -30,14 +32,16 @@ function Connector(id, boardInitializer) {
     this.board = boardInitializer
 }
 
-function Player(id, color, position, orientation) {
+function Player(id, name, color, position, orientation) {
     this.id = id,
+    this.name = name;
     this.color = color,
     this.position = position,
     this.orientation = orientation,
     this.width = playerWidth,
     this.height = playerHeight,
     this.score = 0;
+    this.hp = playerHealth;
 }
 
 function Position(x, y, o) {
@@ -86,7 +90,7 @@ wsServer.on('request', function(request) {
     var requestIndex = ++nextId;
     clients[requestIndex] = connection;
 
-    var player = new Player(requestIndex, _getRandomColor(), _getRandomPosition(), _getRandomOrientation());
+    var player = new Player(requestIndex, "New Player", _getRandomColor(), _getRandomPosition(), _getRandomOrientation());
     boardState.players[requestIndex] = player;
 
     console.log((new Date()) + ' Connection from origin ' + request.origin + '. Assigning ID: ' + requestIndex);
@@ -124,20 +128,20 @@ wsServer.on('request', function(request) {
                     var o = player.position.o;
 
                     if(o === "L") {
-                        posX = player.position.x - playerWidth;
+                        posX = player.position.x - (playerWidth/2);
                         posY = player.position.y;
                     }
                     else if(o === "R") {
-                        posX = player.position.x + playerWidth;
+                        posX = player.position.x + (playerWidth/2);
                         posY = player.position.y;
                     }
                     else if(o === "U") {
                         posX = player.position.x;
-                        posY = player.position.y - playerHeight;
+                        posY = player.position.y - (playerHeight/2);
                     }
                     else if(o === "D") {
                         posX = player.position.x;
-                        posY = player.position.y + playerHeight;
+                        posY = player.position.y + (playerHeight/2);
                     }
 
                     ++nextBulletId;
@@ -164,6 +168,10 @@ wsServer.on('request', function(request) {
                         _updateClients();
                     }, 50);
                 }
+            }
+            if(json.type === "changeusername") {
+                var player = boardState.players[json.id];
+                player.name = json.name;
             }
             _updateClients();
         }
@@ -230,12 +238,17 @@ wsServer.on('request', function(request) {
             if(bullet.playerId !== players[key].id) {
                 if(Math.abs(bullet.position.x - players[key].position.x) <= 5 && Math.abs(bullet.position.y - players[key].position.y) <= 5) { // Fix magic numbers - what about different sized tanks?
                     // Increment shooter's score.
-                    var shooter = players[bullet.playerId];
-                    if(shooter) {
-                        shooter.score++;
-                    }
                     // Reset person who got hit.
-                    players[key].position = _getRandomPosition();
+                    players[key].hp = players[key].hp - 1;
+                    
+                    if(players[key].hp === 0) {
+                        var shooter = players[bullet.playerId];
+                        if(shooter) {
+                            shooter.score++;
+                        }
+                        players[key].hp = playerHealth;
+                        players[key].position = _getRandomPosition();
+                    }
                     return true;
                 }
             }

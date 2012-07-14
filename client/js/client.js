@@ -196,6 +196,7 @@ $(function () {
     
     function sendFire() {
         if (acceptFire) {
+            _playPewSound();
             var jsonmsg = JSON.stringify( { type : 'fire', id : myId } );
             connection.send(jsonmsg);
             acceptFire = false;
@@ -244,5 +245,12 @@ $(function () {
         grid.arc(x,y,2,0,Math.PI*2,true);
         grid.closePath();
         grid.fill();
+    }
+
+    function _playPewSound() {
+        var pewPlayer = $("#pew")[0];
+        pewPlayer.pause();
+        pewPlayer.currentTime = 0;
+        pewPlayer.play();
     }
 });
