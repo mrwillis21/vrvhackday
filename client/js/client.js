@@ -57,51 +57,15 @@ $(function () {
             grid.fillStyle = board['background-color'];
             grid.fillRect(0, 0, board.width, board.height);
             status.text('Board initialized');
-            
-            /*
-            // set the scene size
-            var WIDTH = 400,
-                HEIGHT = 300;
-
-            // set some camera attributes
-            var VIEW_ANGLE = 45,
-                ASPECT = WIDTH / HEIGHT,
-                NEAR = 0.1,
-                FAR = 10000;
-
-            // get the DOM element to attach to
-            // - assume we've got jQuery to hand
-            var $container = $('#game');
-
-            // create a WebGL renderer, camera
-            // and a scene
-            var renderer = new THREE.WebGLRenderer();
-            var camera = new THREE.PerspectiveCamera(
-                               VIEW_ANGLE,
-                               ASPECT,
-                               NEAR,
-                               FAR );
-
-            var scene = new THREE.Scene();
-
-            // the camera starts at 0,0,0 so pull it back
-            camera.position.z = 300;
-
-            // start the renderer
-            renderer.setSize(WIDTH, HEIGHT);
-
-            // attach the render-supplied DOM element
-            $container.append(renderer.domElement); */
         } else if (json.type === 'update') {
             // Add players
-            players = json.players;
-            for (var i=0; i < players.length; i++) {
-                if (players[i].id == myId) {
-                    myColor = players[i].color;
-                }
-                grid.fillStyle = players[i].color;
-                var position = players[i].position;
-                grid.fillRect(position.x-(squareSize/2),position.y-(squareSize/2),squareSize,squareSize);
+            grid.clearRect(0, 0, board.width, board.height);     
+            players = new Object();
+            for (var i=0; i < json.players.length; i++) {
+                var id = json.players[i].id;
+                var position = json.players[i].position;
+                players[id] = json.players[i];
+                updatePlayerPosition(id, position.x, position.y);
             }
             status.text('Players initialized');
             started = true;
@@ -137,21 +101,25 @@ $(function () {
                 // UP
                 var position = players[myId].position;
                 updatePlayerPosition(myId, position.x, position.y-5);
+                players[myId].position.o = "U";
                 sendPosition();
             } else if (e.keyCode === 40) {
                 // DOWN
                 var position = players[myId].position;
                 updatePlayerPosition(myId, position.x, position.y+5);
+                players[myId].position.o = "D";
                 sendPosition();
             } else if (e.keyCode === 37) {
                 // LEFT
                 var position = players[myId].position;
                 updatePlayerPosition(myId, position.x-5, position.y);
+                players[myId].position.o = "L";
                 sendPosition();
             } else if (e.keyCode === 39) {
                 // RIGHT
                 var position = players[myId].position;
                 updatePlayerPosition(myId, position.x+5, position.y);
+                players[myId].position.o = "R";
                 sendPosition();
             }
         }
@@ -173,7 +141,7 @@ $(function () {
     }
     
     function sendPosition() {
-        var jsonmsg = JSON.stringify( { type : 'move', id : myId, 'new-pos' : { 'x' : players[id].position.x, 'y' : players[id].position.y, 'o' : players[id].position.o } } );
+        var jsonmsg = JSON.stringify( { type : 'move', id : myId, 'new-pos' : { 'x' : players[myId].position.x, 'y' : players[myId].position.y, 'o' : players[myId].position.o } } );
         connection.send(jsonmsg);
     }
     
