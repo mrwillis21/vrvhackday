@@ -86,7 +86,7 @@ $(function () {
             for (var playerid in json.players) {
                 var id = json.players[playerid].id;
                 if( id !== myId) {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">player</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
+                    $('#score').append('<tr><td><font color="' + players[id].color + '">' + players[id].name + '</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
                 }
             }
             bullets = new Object();
@@ -113,12 +113,12 @@ $(function () {
             if (!msg) {
                 return;
             }
+            
+            var jsonmsg = JSON.stringify( { type : 'changeusername', id : myId, name : msg } );
             // send the message as an ordinary text
-            connection.send(msg);
+            connection.send(jsonmsg);
+            
             $(this).val('');
-            // disable the input field to make the user wait until server
-            // sends back response
-            input.attr('disabled', 'disabled');
         }
     });
     
