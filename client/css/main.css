@@ -1,21 +1,39 @@
 body {
 	margin: 0px;
 	padding:0px;
+	background: #685635;
 }
+
 #stage {
 	width: 1000px;
 	margin-left: auto;
 	margin-right: auto;
-	padding-top:150px;
 	background: url("../img/page-background.png");
 	background-repeat:no-repeat;
 	background-position:50% 0; 
+	padding-top:150px;
+}
+#holder {
+	width:750px;
+	margin: 0 auto;
+}
+
+#leader {
+	float: right;
+    position: relative;
+	margin-left: 10px;
 }
 #game {
+	position: relative;
 	height: 500px;
 	width: 500px;
 	border: solid 1px black;
 	display: block;
-	margin: 0 auto;
 	background: url("../img/background.png");
+}
+#score {
+	background: #d2c2a6;
+}
+#name {
+	color: #d2c2a6;
 }
