@@ -50,10 +50,12 @@ function Position(x, y, o) {
     this.o = o
 }
 
-function Bullet(id, playerId, position) {
+function Bullet(id, playerId, position, direction) {
     this.id = id;
     this.playerId = playerId,
-    this.position = position
+    this.position = position,
+    this.direction = direction,
+    this.speed = 50, // Fix this later - allow for different types of bullets and things. Variable-speed bullets?
     this.width = 2,
     this.height = 2
 }
@@ -62,6 +64,101 @@ function BoardState() {
     this.type = "update",
     this.players = {},
     this.bullets = {}
+}
+
+var gameTimer = setInterval(function() { _updateBullets(); _updateClients(); }, 500);
+
+function _updateClients() {
+    for(var key in clients) {
+        if(clients[key]) {
+            clients[key].sendUTF(JSON.stringify( boardState ));
+        }
+    }
+}
+
+function _updateBullets() {
+    for(var id in boardState.bullets) {
+        var bullet = boardState.bullets[id];
+        var d = bullet.direction;
+        if(d === "L") {
+            bullet.position.x = bullet.position.x - bullet.speed;
+        }
+        else if(d === "R") {
+            bullet.position.x = bullet.position.x + bullet.speed;
+        }
+        else if(d === "U") {
+            bullet.position.y = bullet.position.y - bullet.speed;
+        }
+        else if(d === "D") {
+            bullet.position.y = bullet.position.y + bullet.speed;
+        }
+        if (_isBulletOutOfBounds(bullet) || _isBulletHitSomeone(bullet)) {
+            delete(boardState.bullets[bullet.id]);
+        }
+    }
+}
+
+function _isBulletOutOfBounds(bullet) {
+    return bullet.position.x < 0 || bullet.position.x > boardWidth || bullet.position.y < 0 || bullet.position.y > boardHeight;
+}
+
+function _isBulletHitSomeone(bullet) {
+    var players = boardState.players;
+    for(var key in players) {
+        if(bullet.playerId !== players[key].id) {
+            if(Math.abs(bullet.position.x - players[key].position.x) <= 5 && Math.abs(bullet.position.y - players[key].position.y) <= 5) { // Fix magic numbers - what about different sized tanks?
+                // Increment shooter's score.
+                // Reset person who got hit.
+                players[key].hp = players[key].hp - 1;
+                
+                if(players[key].hp === 0) {
+                    var shooter = players[bullet.playerId];
+                    if(shooter) {
+                        shooter.score++;
+                    }
+                    players[key].hp = playerHealth;
+                    players[key].position = _getRandomPosition();
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function _getRandomPosition() {
+    // Change 200 to boardLeft + 1/2 of tank size
+    var x = (Math.floor(Math.random()*40) + 40) * moveIncrement;
+    var y = (Math.floor(Math.random()*40) + 40) * moveIncrement;
+    var o = _getRandomOrientation();
+    return new Position(x, y, o);
+}
+
+function _getRandomColor() {
+    return '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6);
+}
+
+function _getRandomOrientation() {
+    var orientations = ["U", "D", "L", "R"];
+    return orientations[Math.floor(Math.random()*orientations.length)];
+}
+
+// collision detection/bounds control
+function _isValidMove(player, newX, newY) {
+    var players = boardState.players;
+    for(var playerId in players) {
+        var otherPlayer = players[playerId];
+        // Make sure I'm not comparing myself to... myself.
+        if(otherPlayer.id != player.id) {
+            if(Math.abs(otherPlayer.position.x - newX) <= 5 && Math.abs(otherPlayer.position.y - newY) <= 5) { // Fix magic numbers - what about different sized tanks?
+                return false;
+            }
+        }
+        if(newX - 5 < 0 || newY - 5 < 0 || newX + 5 > boardWidth || newY + 5 > boardHeight) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -145,28 +242,8 @@ wsServer.on('request', function(request) {
                     }
 
                     ++nextBulletId;
-                    var bullet = new Bullet(nextBulletId, player.id, {"x" : posX, "y" : posY});
+                    var bullet = new Bullet(nextBulletId, player.id, {"x" : posX, "y" : posY}, o);
                     boardState.bullets[nextBulletId] = bullet;
-                    
-                    var timer = setInterval(function() {
-                        if(o === "L") {
-                            bullet.position.x = bullet.position.x - moveIncrement;
-                        }
-                        else if(o === "R") {
-                            bullet.position.x = bullet.position.x + moveIncrement;
-                        }
-                        else if(o === "U") {
-                            bullet.position.y = bullet.position.y - moveIncrement;
-                        }
-                        else if(o === "D") {
-                            bullet.position.y = bullet.position.y + moveIncrement;
-                        }
-                        if (_isBulletOutOfBounds(bullet) || _isBulletHitSomeone(bullet)) {
-                            clearInterval(timer);
-                            delete(boardState.bullets[bullet.id]);
-                        }
-                        _updateClients();
-                    }, 50);
                 }
             }
             if(json.type === "changeusername") {
@@ -184,75 +261,4 @@ wsServer.on('request', function(request) {
             console.log("Player " + requestIndex + " logged out.");
             _updateClients();
     });
-
-    function _updateClients() {
-        for(var key in clients) {
-            if(clients[key]) {
-                clients[key].sendUTF(JSON.stringify( boardState ));
-            }
-        }
-    }
-
-    function _getRandomPosition() {
-        // Change 200 to boardLeft + 1/2 of tank size
-        var x = (Math.floor(Math.random()*40) + 40) * moveIncrement;
-        var y = (Math.floor(Math.random()*40) + 40) * moveIncrement;
-        var o = _getRandomOrientation();
-        return new Position(x, y, o);
-    }
-
-    function _getRandomColor() {
-        return '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6);
-    }
-
-    function _getRandomOrientation() {
-        var orientations = ["U", "D", "L", "R"];
-        return orientations[Math.floor(Math.random()*orientations.length)];
-    }
-
-    // collision detection/bounds control
-    function _isValidMove(player, newX, newY) {
-        var players = boardState.players;
-        for(var playerId in players) {
-            var otherPlayer = players[playerId];
-            // Make sure I'm not comparing myself to... myself.
-            if(otherPlayer.id != player.id) {
-                if(Math.abs(otherPlayer.position.x - newX) <= 5 && Math.abs(otherPlayer.position.y - newY) <= 5) { // Fix magic numbers - what about different sized tanks?
-                    return false;
-                }
-            }
-            if(newX - 5 < 0 || newY - 5 < 0 || newX + 5 > boardInit.width || newY + 5 > boardInit.height) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    function _isBulletOutOfBounds(bullet) {
-        return bullet.position.x < 0 || bullet.position.x > boardInit.width || bullet.position.y < 0 || bullet.position.y > boardInit.height
-    }
-
-    function _isBulletHitSomeone(bullet) {
-        var players = boardState.players;
-        for(var key in players) {
-            if(bullet.playerId !== players[key].id) {
-                if(Math.abs(bullet.position.x - players[key].position.x) <= 5 && Math.abs(bullet.position.y - players[key].position.y) <= 5) { // Fix magic numbers - what about different sized tanks?
-                    // Increment shooter's score.
-                    // Reset person who got hit.
-                    players[key].hp = players[key].hp - 1;
-                    
-                    if(players[key].hp === 0) {
-                        var shooter = players[bullet.playerId];
-                        if(shooter) {
-                            shooter.score++;
-                        }
-                        players[key].hp = playerHealth;
-                        players[key].position = _getRandomPosition();
-                    }
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 });
