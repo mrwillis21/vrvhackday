@@ -27,85 +27,64 @@ $(function () {
     var movementSpeed = 100;
     var bulletRate = 500;
     
-    // if user is running mozilla then use it's built-in WebSocket
-    window.WebSocket = window.WebSocket || window.MozWebSocket;
-
-    var connection = new WebSocket('ws://mwillis.pyxisit.com:1337');
-
-    connection.onopen = function () {
-        // connection is opened and ready to use
-        input.removeAttr('disabled');
-        status.text('Enter Name:');
-    };
-
-    connection.onerror = function (error) {
-        // an error occurred when sending/receiving data
-        status.text('Error');
-    };
-
-    connection.onmessage = function (message) {
-        // try to decode json (I assume that each message from server is json)
-        try {
-            var json = JSON.parse(message.data);
-        } catch (e) {
-            console.log('This doesn\'t look like a valid JSON: ', message.data);
-            return;
-        }
-        // handle incoming message
+    var connector = new Connector("mwillis.pyxisit.com","1337");
+    connector.onConnectSuccess(function(json) {
+        // Grab my id
+        myId = json.yourid;
         
-        if (json.type === 'connectsuccess') {
-            // Grab my id
-            myId = json.yourid;
-            
-            // Setup board
-            board = json.board;
-            maxHealth = board.maxHealth;
-            grid_canvas.width = board.width;
-            grid_canvas.height = board.height;
-            grid.clearRect(0, 0, board.width, board.height);
-            grid.fillStyle = board['background-color'];
-            grid.fillRect(0, 0, board.width, board.height);
-            status.text('Board initialized');
-        } else if (json.type === 'update') {
-            // Add players
-            grid.clearRect(0, 0, board.width, board.height);  
-            $("#score").find("tr").remove();   
-            players = new Object();
-            for (var playerid in json.players) {
-                var position = json.players[playerid].position;
-                players[playerid] = json.players[playerid];
-                updatePlayerPosition(players[playerid].id, position.x, position.y, position.o);
-            }
-            $('#score').append('<tr><td>Name</td><td>Score</td><td>Health</td></tr>');
-            for (var playerid in json.players) {
-                var id = json.players[playerid].id;
-                if( id === myId) {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">' + players[id].name + '</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
-                }
-            }
-            for (var playerid in json.players) {
-                var id = json.players[playerid].id;
-                if( id !== myId) {
-                    $('#score').append('<tr><td><font color="' + players[id].color + '">' + players[id].name + '</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
-                }
-            }
-            bullets = new Object();
-            for (var bulletid in json.bullets) {
-                var position = json.bullets[bulletid].position;
-                updateBulletPosition(position.x, position.y);
-            }
-            status.text('Have fun!');
-            started = true;
-        } else if (json.type === 'messages') { // entire message history
-            // insert every single message to the chat window
-            for (var i=0; i < json.data.length; i++) {
-                addMessage(json.data[i].author, json.data[i].text, new Date(json.data[i].time));
-            }
-        } else if (json.type === 'message') { // it's a single message
-            input.removeAttr('disabled'); // let the user write another message
-            addMessage(json.data.author, json.data.text, new Date(json.data.time));
+        // Setup board
+        board = json.board;
+        maxHealth = board.maxHealth;
+        grid_canvas.width = board.width;
+        grid_canvas.height = board.height;
+        grid.clearRect(0, 0, board.width, board.height);
+        grid.fillStyle = board['background-color'];
+        grid.fillRect(0, 0, board.width, board.height);
+        status.text('Board initialized');
+    });
+    connector.onBoardUpdate(function(json) {
+        console.log("updating");
+        // Add players
+        grid.clearRect(0, 0, board.width, board.height);  
+        $("#score").find("tr").remove();   
+        players = new Object();
+        for (var playerid in json.players) {
+            var position = json.players[playerid].position;
+            players[playerid] = json.players[playerid];
+            updatePlayerPosition(players[playerid].id, position.x, position.y, position.o);
         }
-    };
+        $('#score').append('<tr><td>Name</td><td>Score</td><td>Health</td></tr>');
+        for (var playerid in json.players) {
+            var id = json.players[playerid].id;
+            if( id === myId) {
+                $('#score').append('<tr><td><font color="' + players[id].color + '">' + players[id].name + '</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
+            }
+        }
+        for (var playerid in json.players) {
+            var id = json.players[playerid].id;
+            if( id !== myId) {
+                $('#score').append('<tr><td><font color="' + players[id].color + '">' + players[id].name + '</font></td><td>' + players[id].score + '</td><td>' + players[id].hp + '</td></tr>');
+            }
+        }
+        bullets = new Object();
+        for (var bulletid in json.bullets) {
+            var position = json.bullets[bulletid].position;
+            updateBulletPosition(position.x, position.y);
+        }
+        status.text('Have fun!');
+        started = true;
+    });
+    connector.onMessages(function(json) {
+        // insert every single message to the chat window
+        for (var i=0; i < json.data.length; i++) {
+            addMessage(json.data[i].author, json.data[i].text, new Date(json.data[i].time));
+        }
+    });
+    connector.onMessage(function(json){
+        input.removeAttr('disabled'); // let the user write another message
+        addMessage(json.data.author, json.data.text, new Date(json.data.time));
+    });
+    connector.connect();
     
     input.keydown(function(e) {
         if (e.keyCode === 13) {
@@ -116,7 +95,7 @@ $(function () {
             
             var jsonmsg = JSON.stringify( { type : 'changeusername', id : myId, name : msg } );
             // send the message as an ordinary text
-            connection.send(jsonmsg);
+            connector.sendMessage(jsonmsg);
             
             $(this).val('');
             input.attr('style', 'visibility:hidden');
@@ -176,13 +155,13 @@ $(function () {
         }
     });
     
-    setInterval(function() {
+    /*setInterval(function() {
         if (connection.readyState !== 1) {
             status.text('Error');
             input.attr('disabled', 'disabled').val('Unable to comminucate '
                                                              + 'with the WebSocket server.');
         }
-    }, 3000);
+    }, 3000);*/
     
     function addMessage(author, message, color, dt) {
         game.append('<p><span>' + author + '</span> @ ' +
@@ -193,14 +172,14 @@ $(function () {
     
     function sendPosition() {
         var jsonmsg = JSON.stringify( { type : 'move', id : myId, 'new-pos' : { 'x' : players[myId].position.x, 'y' : players[myId].position.y, 'o' : players[myId].position.o } } );
-        connection.send(jsonmsg);
+        connector.sendMessage(jsonmsg);
     }
     
     function sendFire() {
         if (acceptFire) {
             _playPewSound();
             var jsonmsg = JSON.stringify( { type : 'fire', id : myId } );
-            connection.send(jsonmsg);
+            connector.sendMessage(jsonmsg);
             acceptFire = false;
             setTimeout(function() {
                 acceptFire = true;
