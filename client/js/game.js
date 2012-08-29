@@ -34,6 +34,7 @@ $(function () {
     });
     connector.onBoardUpdate(function(data) {
         console.log("Received update message from server...");
+        console.dir(data);
 
         // Remove any players that have left.
         for(var playerID in clientPlayers) {
@@ -91,11 +92,12 @@ $(function () {
         }
 
         if(updateState) {
-            connector.sendMessage(clientPlayers[clientID]);
+            connector.sendMessage({type: "statechange", player: clientPlayers[clientID]});
         }
     });
 
     $(document).keyup(function(e) {
+        var updateState = false;
         if (e.which === 38) {
             // UP
             clientPlayers[clientID].stopMoving("U");
@@ -115,7 +117,7 @@ $(function () {
         }
 
         if(updateState) {
-            connector.sendMessage(clientPlayers[clientID]);
+            connector.sendMessage({type: "statechange", player: clientPlayers[clientID]});
         }
     });
 
