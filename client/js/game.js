@@ -26,7 +26,7 @@ $(function () {
         
         console.log("Client initialized.");
 
-        this.sendMessage(JSON.stringify(clientPlayer));
+        this.sendMessage(clientPlayer);
 
         console.log("Letting the server know I'm here...");
 
@@ -39,7 +39,7 @@ $(function () {
         for(var playerID in clientPlayers) {
             if(!(data.players[playerID])) {
                 delete(clientPlayers[playerID]);
-                // Need to also remove the player from the screen on next repaint.
+                // Note: unless the canvas gets a full refresh on every repaint, we'll need to work out how to incrementally remove players who have disappeared from the screen.
             }
         }
 
@@ -62,8 +62,6 @@ $(function () {
             clientPlayer.size = serverPlayer.size;
             clientPlayer.speed = serverPlayer.speed;
             clientPlayer.maxHP = serverPlayer.maxHP;
-            // TODO: Remove players.
-            //delete(clientPlayers[playerID]); // If the player's disappeared, delete it from the list. This might cause problems. Follow up.
         }
     });
     connector.connect(); 
@@ -71,20 +69,29 @@ $(function () {
     var animator = new Animator(drawBoardState).startAnimation();
     
     $(document).keydown(function(e) {
+        var updateState = false;
         if (e.which === 38) {
             // UP
             clientPlayers[clientID].startMoving("U");
+            updateState = true;
         } else if (e.which === 40) {
             // DOWN
             clientPlayers[clientID].startMoving("D");
+            updateState = true;
         } else if (e.which === 37) {
             // LEFT
             clientPlayers[clientID].startMoving("L");
+            updateState = true;
         } else if (e.which === 39) {
             // RIGHT
             clientPlayers[clientID].startMoving("R");
+            updateState = true;
         } else if (e.which === 32) {
             //sendFire();
+        }
+
+        if(updateState) {
+            connector.sendMessage(clientPlayers[clientID]);
         }
     });
 
@@ -92,19 +99,28 @@ $(function () {
         if (e.which === 38) {
             // UP
             clientPlayers[clientID].stopMoving("U");
+            updateState = true;
         } else if (e.which === 40) {
             // DOWN
             clientPlayers[clientID].stopMoving("D");
+            updateState = true;
         } else if (e.which === 37) {
             // LEFT
             clientPlayers[clientID].stopMoving("L");
+            updateState = true;
         } else if (e.which === 39) {
             // RIGHT
             clientPlayers[clientID].stopMoving("R");
+            updateState = true;
+        }
+
+        if(updateState) {
+            connector.sendMessage(clientPlayers[clientID]);
         }
     });
 
     function drawBoardState() {
+        grid.clearRect(0, 0, grid_canvas.width, grid_canvas.height);
         for(var playerID in clientPlayers) {
             drawPlayer(playerID);
         }
@@ -114,19 +130,21 @@ $(function () {
     function drawPlayer(id) {
         grid.fillStyle = clientPlayers[id].color;
 
-        // Clear old position
+        // FIXME: Clear old position if we don't use full clear/repaint cycles for performance reasons.
+        /*var playerX = clientPlayers[id].x;
+        var playerY = clientPlayers[id].y;
+        var playerSize = clientPlayers[id].size;
+        grid.clearRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);*/
+
+        // TODO: Verify that the next move is valid before allowing it.
+        clientPlayers[id].move();
+
         var playerX = clientPlayers[id].x;
         var playerY = clientPlayers[id].y;
         var playerSize = clientPlayers[id].size;
-        grid.clearRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
-
-        clientPlayers[id].move();
-
-        playerX = clientPlayers[id].x;
-        playerY = clientPlayers[id].y;
-        playerSize = clientPlayers[id].size;
         grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
 
+        // The below code is the old code to paint the turrets on the tanks.
         /*grid.fillStyle = "#FFFFFF";
         grid.fillRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
         grid.fillStyle = players[id].color;

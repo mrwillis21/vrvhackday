@@ -49,7 +49,7 @@ Connector.prototype.connect = function() {
 }
 
 Connector.prototype.sendMessage = function(message) {
-	this.connection.send(message);
+	this.connection.send(JSON.stringify(message));
 }
 
 Connector.prototype.onBoardUpdate = function(boardUpdateCallback) {
