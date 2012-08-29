@@ -14,6 +14,7 @@ var wsServer = new WebSocketServer({
 
 // Starting values.
 var clients = {};
+var serverPlayers = {};
 var playerID = -1;
 var playerSize = 10;
 var playerSpeed = 1;
@@ -30,9 +31,7 @@ wsServer.on('request', function(request) {
     clients[requestIndex] = connection;
 
 	var position = _getRandomPosition();
-    var connectionData = {
-    	type: "connectsuccess",
-        player: {
+    var player = {
             id: requestIndex,
             x: position.x,
             y: position.y,
@@ -41,15 +40,41 @@ wsServer.on('request', function(request) {
             size: playerSize,
             speed: playerSpeed,
             maxHP: playerMaxHP
-        }
+        };
+    serverPlayers[player.id] = player;
+    var connectionData = {
+    	type: "connectsuccess",
+        player: player
     };
 
-    // Send initializion message.
+    // Send initialization message.
     connection.sendUTF(JSON.stringify( connectionData ));
+
+    connection.on('message', function(message) {
+        if (message.type === 'utf8') {
+            var data = JSON.parse(message.utf8Data);
+            if(data.type === "statechange") {
+                var player = serverPlayers[data.player.id];
+                if(player) {
+                    player.id = data.player.id;
+                    player.color = data.player.color;
+                    player.x = data.player.x;
+                    player.y = data.player.y;
+                    player.orientation = data.player.orientation;
+                    player.size = data.player.size;
+                    player.speed = data.player.speed;
+                    player.maxHP = data.player.maxHP;
+                }
+            }
+            _updateClients({type: "update", players: serverPlayers}); // TODO: Fill out a full, proper boardState object.
+            // If we communicate state changes, do we actually have to communicate on a heartbeat?
+        }
+    });
 
     connection.on('close', function(connection) {
             // remove user from the list of connected clients
             delete(clients[requestIndex]);
+            delete(serverPlayers[requestIndex]);
             console.log("Player " + requestIndex + " logged out.");
     });
 });
@@ -77,4 +102,12 @@ function _getRandomColor() {
 function _getRandomOrientation() {
     var orientations = ["U", "D", "L", "R"];
     return orientations[Math.floor(Math.random()*orientations.length)];
+}
+
+function _updateClients(object) {
+    for(var id in clients) {
+        if(clients[id]) {
+            clients[id].sendUTF(JSON.stringify( object ));
+        }
+    }
 }

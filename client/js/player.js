@@ -56,6 +56,7 @@ Player.prototype.move = function() {
 
 Player.prototype.startMoving = function(orientation) {
 	// TODO: undefined = "U"?
+	// TODO: Acceleration/deceleration?
 	this.orientation = orientation;
 	this.moving = true;
 }

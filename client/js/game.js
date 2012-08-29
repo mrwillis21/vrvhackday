@@ -9,7 +9,7 @@ $(function () {
     var grid_canvas = document.getElementById("game");
     var grid = grid_canvas.getContext("2d");
     
-    var players = new Object();
+    var clientPlayers = {};
     
     var clientID = -1;
 
@@ -23,9 +23,48 @@ $(function () {
         clientPlayer.setSize(data.player.size);
         clientPlayer.setSpeed(data.player.speed);
         clientPlayer.setMaxHP(data.player.maxHP);
-        players[clientID] = clientPlayer;
         
-        console.log("Board initialized");
+        console.log("Client initialized.");
+
+        this.sendMessage(JSON.stringify(clientPlayer));
+
+        console.log("Letting the server know I'm here...");
+
+        clientPlayers[clientID] = clientPlayer;
+    });
+    connector.onBoardUpdate(function(data) {
+        console.log("Received update message from server...");
+
+        // Remove any players that have left.
+        for(var playerID in clientPlayers) {
+            if(!(data.players[playerID])) {
+                delete(clientPlayers[playerID]);
+                // Need to also remove the player from the screen on next repaint.
+            }
+        }
+
+        for (var playerID in data.players) {
+            var clientPlayer = clientPlayers[playerID];
+
+            if(!clientPlayer) {
+                // Add the player to the client list.
+                clientPlayer = new Player(playerID);
+                clientPlayers[playerID] = clientPlayer;
+            }
+
+            var serverPlayer = data.players[playerID];
+
+            clientPlayer.id = serverPlayer.id;
+            clientPlayer.color = serverPlayer.color;
+            clientPlayer.x = serverPlayer.x;
+            clientPlayer.y = serverPlayer.y;
+            clientPlayer.orientation = serverPlayer.orientation;
+            clientPlayer.size = serverPlayer.size;
+            clientPlayer.speed = serverPlayer.speed;
+            clientPlayer.maxHP = serverPlayer.maxHP;
+            // TODO: Remove players.
+            //delete(clientPlayers[playerID]); // If the player's disappeared, delete it from the list. This might cause problems. Follow up.
+        }
     });
     connector.connect(); 
 
@@ -34,16 +73,16 @@ $(function () {
     $(document).keydown(function(e) {
         if (e.which === 38) {
             // UP
-            players[clientID].startMoving("U");
+            clientPlayers[clientID].startMoving("U");
         } else if (e.which === 40) {
             // DOWN
-            players[clientID].startMoving("D");
+            clientPlayers[clientID].startMoving("D");
         } else if (e.which === 37) {
             // LEFT
-            players[clientID].startMoving("L");
+            clientPlayers[clientID].startMoving("L");
         } else if (e.which === 39) {
             // RIGHT
-            players[clientID].startMoving("R");
+            clientPlayers[clientID].startMoving("R");
         } else if (e.which === 32) {
             //sendFire();
         }
@@ -52,40 +91,40 @@ $(function () {
     $(document).keyup(function(e) {
         if (e.which === 38) {
             // UP
-            players[clientID].stopMoving("U");
+            clientPlayers[clientID].stopMoving("U");
         } else if (e.which === 40) {
             // DOWN
-            players[clientID].stopMoving("D");
+            clientPlayers[clientID].stopMoving("D");
         } else if (e.which === 37) {
             // LEFT
-            players[clientID].stopMoving("L");
+            clientPlayers[clientID].stopMoving("L");
         } else if (e.which === 39) {
             // RIGHT
-            players[clientID].stopMoving("R");
+            clientPlayers[clientID].stopMoving("R");
         }
     });
 
     function drawBoardState() {
-        for(var playerID in players) {
+        for(var playerID in clientPlayers) {
             drawPlayer(playerID);
         }
         // TODO: Draw ordnance, etc.
     }
 
     function drawPlayer(id) {
-        grid.fillStyle = players[id].color;
+        grid.fillStyle = clientPlayers[id].color;
 
         // Clear old position
-        var playerX = players[id].x;
-        var playerY = players[id].y;
-        var playerSize = players[id].size;
+        var playerX = clientPlayers[id].x;
+        var playerY = clientPlayers[id].y;
+        var playerSize = clientPlayers[id].size;
         grid.clearRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
 
-        players[id].move();
+        clientPlayers[id].move();
 
-        playerX = players[id].x;
-        playerY = players[id].y;
-        playerSize = players[id].size;
+        playerX = clientPlayers[id].x;
+        playerY = clientPlayers[id].y;
+        playerSize = clientPlayers[id].size;
         grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
 
         /*grid.fillStyle = "#FFFFFF";
