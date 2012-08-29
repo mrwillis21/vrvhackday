@@ -1,24 +1,76 @@
-function Player(id) {
+var Player = function(id) {
 	this.id = id;
-	this.canFire = true;
-	this.moving = false;
 	this.x = 0;
 	this.y = 0;
-	this.o = "U";
+	this.orientation = "U";
+	this.color = "#000000";
+	this.size = 10;
+	this.maxHP = 3;
+	this.currentHP = 3;
+	this.canFire = true;
+	this.moving = false;
 	this.speed = 1;
 }
+
+Player.prototype.setPosition = function(x, y, orientation) {
+	this.x = x;
+	this.y = y;
+	this.orientation = orientation;
+}
+
+Player.prototype.setColor = function(color) {
+	this.color = color;
+}
+
+Player.prototype.setSize = function(size) {
+	// TODO: Check for int.
+	this.size = size;
+}
+
+Player.prototype.setMaxHP = function(hp) {
+	// TODO: Check for int.
+	this.maxHP = hp;
+}
+
+Player.prototype.setSpeed = function(speed) {
+	this.speed = speed;
+}
+
 Player.prototype.move = function() {
-	// TODO: Verify legal move before moving.
-	if(this.o === "U") {
-		this.y = this.y-speed;
-	}
-	else if(this.o === "D") {
-		this.y = this.y+speed;
-	}
-	else if(this.o === "L") {
-		this.x = this.x-speed;
-	}
-	else if(this.o === "R") {
-		this.x = this.x+speed;
+	if(this.moving) {
+		// TODO: Verify legal move before moving. Should the entity take care of this or the board manager?
+		if(this.orientation === "U") {
+			this.y = this.y-this.speed;
+		}
+		else if(this.orientation === "D") {
+			this.y = this.y+this.speed;
+		}
+		else if(this.orientation === "L") {
+			this.x = this.x-this.speed;
+		}
+		else if(this.orientation === "R") {
+			this.x = this.x+this.speed;
+		}
 	}
 }
+
+Player.prototype.triggerMove = function(orientation) {
+	var oldOrientation = this.orientation;
+	this.orientation = orientation;
+	if(this.moving) {
+		if(oldOrientation === "U" && orientation === "D" ||
+			oldOrientation === "D" && orientation === "U" ||
+			oldOrientation === "L" && orientation === "R" ||
+			oldOrientation === "R" && orientation === "L") {
+			this.moving = false;
+		}
+	}
+	else {
+		this.moving = true;
+	}
+}
+
+// Fire
+// Turn turret
+// Turn vehicle
+// 

@@ -1,4 +1,4 @@
-function Connector(url, port) {
+var Connector = function(url, port) {
 	this.url = url;
 	this.port = port;
 }
@@ -15,17 +15,6 @@ Connector.prototype.connect = function() {
     };
 
     this.connection.onerror = function(error) {};
-
-    /*connection.onopen = function () {
-        // connection is opened and ready to use
-        input.removeAttr('disabled');
-        status.text('Enter Name:');
-    };
-
-    connection.onerror = function (error) {
-        // an error occurred when sending/receiving data
-        status.text('Error');
-    };*/
 
     this.connection.onmessage = function(message) {
     	// try to decode json (I assume that each message from server is json)
