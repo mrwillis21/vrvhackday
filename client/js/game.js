@@ -32,21 +32,37 @@ $(function () {
     var animator = new Animator(drawBoardState).startAnimation();
     
     $(document).keydown(function(e) {
-            if (e.keyCode === 38) {
-                // UP
-                players[clientID].triggerMove("U");
-            } else if (e.keyCode === 40) {
-                // DOWN
-                players[clientID].triggerMove("D");
-            } else if (e.keyCode === 37) {
-                // LEFT
-                players[clientID].triggerMove("L");
-            } else if (e.keyCode === 39) {
-                // RIGHT
-                players[clientID].triggerMove("R");
-            } else if (e.keyCode === 32) {
-                //sendFire();
-            }
+        if (e.which === 38) {
+            // UP
+            players[clientID].startMoving("U");
+        } else if (e.which === 40) {
+            // DOWN
+            players[clientID].startMoving("D");
+        } else if (e.which === 37) {
+            // LEFT
+            players[clientID].startMoving("L");
+        } else if (e.which === 39) {
+            // RIGHT
+            players[clientID].startMoving("R");
+        } else if (e.which === 32) {
+            //sendFire();
+        }
+    });
+
+    $(document).keyup(function(e) {
+        if (e.which === 38) {
+            // UP
+            players[clientID].stopMoving("U");
+        } else if (e.which === 40) {
+            // DOWN
+            players[clientID].stopMoving("D");
+        } else if (e.which === 37) {
+            // LEFT
+            players[clientID].stopMoving("L");
+        } else if (e.which === 39) {
+            // RIGHT
+            players[clientID].stopMoving("R");
+        }
     });
 
     function drawBoardState() {

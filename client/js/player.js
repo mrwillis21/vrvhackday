@@ -54,19 +54,15 @@ Player.prototype.move = function() {
 	}
 }
 
-Player.prototype.triggerMove = function(orientation) {
-	var oldOrientation = this.orientation;
+Player.prototype.startMoving = function(orientation) {
+	// TODO: undefined = "U"?
 	this.orientation = orientation;
-	if(this.moving) {
-		if(oldOrientation === "U" && orientation === "D" ||
-			oldOrientation === "D" && orientation === "U" ||
-			oldOrientation === "L" && orientation === "R" ||
-			oldOrientation === "R" && orientation === "L") {
-			this.moving = false;
-		}
-	}
-	else {
-		this.moving = true;
+	this.moving = true;
+}
+
+Player.prototype.stopMoving = function(orientation) {
+	if(this.orientation === orientation) {
+		this.moving = false;
 	}
 }
 
