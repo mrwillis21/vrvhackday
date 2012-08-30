@@ -144,6 +144,8 @@ $(function () {
         var playerX = clientPlayers[id].x;
         var playerY = clientPlayers[id].y;
         var playerSize = clientPlayers[id].size;
+        // INTERPOLATE!
+        // ... to find playerX and playerY
         grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
 
         // The below code is the old code to paint the turrets on the tanks.
