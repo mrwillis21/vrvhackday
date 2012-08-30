@@ -16,6 +16,10 @@ var clients = {};
 var newPlayerID = -1;
 
 var sim = require('./simulation');
+sim.onCalculateWorldState(function() {
+    console.log("Calculating world state from the server!");
+});
+sim.startSimulation();
 
 // WebSocket server
 wsServer.on('request', function(request) {

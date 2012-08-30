@@ -4,14 +4,22 @@ var playerSpeed = 1;
 var playerMaxHP = 3;
 
 var players = {};
-
-var boardWidth = 500;
-var boardHeight = 500;
+var isSimulationRunning = false;
 
 var Player = require("./player");
 
+exports.startSimulation = function() {
+    isSimulationRunning = true;
+    _tick();
+}
+
+exports.stopSimulation = function() {
+    isSimulationRunning = false;
+}
+
 exports.addNewPlayer = function(id) {
-	var position = _getRandomPosition();
+    console.log("Adding player " + id);
+    var position = _getRandomPosition();
     var player = new Player(id);
     player.setPosition(position.x, position.y, position.orientation);
     player.setColor(_getRandomColor());
@@ -19,12 +27,35 @@ exports.addNewPlayer = function(id) {
     player.setSpeed(playerSpeed);
     player.setMaxHP(playerMaxHP);
 
-	players[id] = player;
+    players[id] = player;
 }
 
 exports.removePlayer = function(id) {
+    console.log("Removing player " + id);
     delete(players[id]);
 }
+
+exports.onCalculateWorldState = function(callback) {
+    calculate_callback = callback;
+}
+
+// Tick on a 100ms heartbeat.
+var _tick = function() {
+    _calculateWorldState();
+    if(isSimulationRunning) {
+        setTimeout(_tick, 100);
+    }
+}
+
+var _calculateWorldState = function() {
+    // TODO: Calculate world snapshot
+    var snapshot = {};
+    if(calculate_callback) {
+        calculate_callback(snapshot);
+    }
+}
+
+// Helper functions
 
 var _getRandomPosition = function() {
     // Change 200 to boardLeft + 1/2 of tank size
