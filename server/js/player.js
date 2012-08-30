@@ -71,3 +71,6 @@ Player.prototype.stopMoving = function(orientation) {
 // Turn turret
 // Turn vehicle
 // 
+
+// Expose the class to Node.js
+module.exports = Player;

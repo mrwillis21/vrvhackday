@@ -15,7 +15,7 @@ var wsServer = new WebSocketServer({
 var clients = {};
 var newPlayerID = -1;
 
-var sim = require('./simulation.js');
+var sim = require('./simulation');
 
 // WebSocket server
 wsServer.on('request', function(request) {
@@ -23,20 +23,26 @@ wsServer.on('request', function(request) {
     
     var requestIndex = ++newPlayerID;
     clients[requestIndex] = connection;
-    var player = sim.addNewPlayer(requestIndex);
+    sim.addNewPlayer(requestIndex);
     
     var connectionData = {
     	type: "connectsuccess",
-        player: player
+        id: requestIndex
     };
 
     // Send initialization message.
     connection.sendUTF(JSON.stringify( connectionData ));
 
-    /*connection.on('message', function(message) {
-        if (message.type === 'utf8') {
-            var data = JSON.parse(message.utf8Data);
-            if(data.type === "statechange") {
+    connection.on('message', function(data) {
+        if (data.type === 'utf8') {
+            var message = JSON.parse(data.utf8Data);
+            if(message.type === "keyDown") {
+                console.log("Client " + message.data.id + " pressed key " + message.data.keyCode);
+            }
+            else if(message.type === "keyUp") {
+                console.log("Client " + message.data.id + " released key " + message.data.keyCode);
+            }
+            /*if(data.type === "statechange") {
                 var player = serverPlayers[data.player.id];
                 if(player) {
                     player.id = data.player.id;
@@ -49,14 +55,14 @@ wsServer.on('request', function(request) {
                     player.maxHP = data.player.maxHP;
                 }
             }
-            _updateClients({type: "update", players: serverPlayers}); // TODO: Fill out a full, proper boardState object.
+            _updateClients({type: "update", players: serverPlayers}); // TODO: Fill out a full, proper boardState object.*/
         }
-    });*/
+    });
 
     connection.on('close', function(connection) {
             // remove user from the list of connected clients
             delete(clients[requestIndex]);
-            delete(serverPlayers[requestIndex]);
+            sim.removePlayer(requestIndex);
             console.log("Player " + requestIndex + " logged out.");
     });
 });

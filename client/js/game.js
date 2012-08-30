@@ -9,144 +9,59 @@ $(function () {
     var grid_canvas = document.getElementById("game");
     var grid = grid_canvas.getContext("2d");
     
-    var clientPlayers = {};
-    
     var clientID = -1;
+    var boardSnapshots = [];
 
     // This can live wherever in this file.
     var connector = new Connector("mwillis.pyxisit.com","1337"); // TODO: Set these values elsewhere.
     connector.onConnectSuccess(function(data) {
-        clientID = data.player.id;
-        var clientPlayer = new Player(clientID);
-        clientPlayer.setPosition(data.player.x, data.player.y, data.player.orientation);
-        clientPlayer.setColor(data.player.color);
-        clientPlayer.setSize(data.player.size);
-        clientPlayer.setSpeed(data.player.speed);
-        clientPlayer.setMaxHP(data.player.maxHP);
-        
-        console.log("Client initialized.");
-
-        this.sendMessage(clientPlayer);
-
-        console.log("Letting the server know I'm here...");
-
-        clientPlayers[clientID] = clientPlayer;
+        clientID = data.id;
+        console.log("Connected.");
     });
     connector.onBoardUpdate(function(data) {
         console.log("Received update message from server...");
         console.dir(data);
-
-        // Remove any players that have left.
-        for(var playerID in clientPlayers) {
-            if(!(data.players[playerID])) {
-                delete(clientPlayers[playerID]);
-                // Note: unless the canvas gets a full refresh on every repaint, we'll need to work out how to incrementally remove players who have disappeared from the screen.
-            }
-        }
-
-        for (var playerID in data.players) {
-            var clientPlayer = clientPlayers[playerID];
-
-            if(!clientPlayer) {
-                // Add the player to the client list.
-                clientPlayer = new Player(playerID);
-                clientPlayers[playerID] = clientPlayer;
-            }
-
-            var serverPlayer = data.players[playerID];
-
-            clientPlayer.id = serverPlayer.id;
-            clientPlayer.color = serverPlayer.color;
-            clientPlayer.x = serverPlayer.x;
-            clientPlayer.y = serverPlayer.y;
-            clientPlayer.orientation = serverPlayer.orientation;
-            clientPlayer.size = serverPlayer.size;
-            clientPlayer.speed = serverPlayer.speed;
-            clientPlayer.maxHP = serverPlayer.maxHP;
-        }
     });
     connector.connect(); 
 
     var animator = new Animator(drawBoardState).startAnimation();
     
     $(document).keydown(function(e) {
-        var updateState = false;
-        if (e.which === 38) {
-            // UP
-            clientPlayers[clientID].startMoving("U");
-            updateState = true;
-        } else if (e.which === 40) {
-            // DOWN
-            clientPlayers[clientID].startMoving("D");
-            updateState = true;
-        } else if (e.which === 37) {
-            // LEFT
-            clientPlayers[clientID].startMoving("L");
-            updateState = true;
-        } else if (e.which === 39) {
-            // RIGHT
-            clientPlayers[clientID].startMoving("R");
-            updateState = true;
-        } else if (e.which === 32) {
-            //sendFire();
-        }
-
-        if(updateState) {
-            connector.sendMessage({type: "statechange", player: clientPlayers[clientID]});
-        }
+        var message = new NetworkMessage("keyDown");
+        message.putData("id", clientID);
+        message.putData("keyCode", e.which);
+        connector.sendMessage(message);
     });
 
     $(document).keyup(function(e) {
-        var updateState = false;
-        if (e.which === 38) {
-            // UP
-            clientPlayers[clientID].stopMoving("U");
-            updateState = true;
-        } else if (e.which === 40) {
-            // DOWN
-            clientPlayers[clientID].stopMoving("D");
-            updateState = true;
-        } else if (e.which === 37) {
-            // LEFT
-            clientPlayers[clientID].stopMoving("L");
-            updateState = true;
-        } else if (e.which === 39) {
-            // RIGHT
-            clientPlayers[clientID].stopMoving("R");
-            updateState = true;
-        }
-
-        if(updateState) {
-            connector.sendMessage({type: "statechange", player: clientPlayers[clientID]});
-        }
+        var message = new NetworkMessage("keyUp");
+        message.putData("id", clientID);
+        message.putData("keyCode", e.which);
+        connector.sendMessage(message);
     });
 
     function drawBoardState() {
+        // TODO: Grab latest board snapshot (list of players, bullets, etc.)
+        // 
         grid.clearRect(0, 0, grid_canvas.width, grid_canvas.height);
-        for(var playerID in clientPlayers) {
-            drawPlayer(playerID);
+        var boardSnapshot = {}; // TODO: Get the board snapshot at now-75 ms with a loop. Drop off any snapshots that are older.
+        var players = boardSnapshot.players;
+        for(var playerID in players) {
+            var player = players[playerID];
+            grid.fillStyle = player.color;
+
+            var playerX = player.x;
+            var playerY = player.y;
+            var playerSize = player.size;
+            // INTERPOLATE!
+            // ... to find playerX and playerY
+            grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
         }
         // TODO: Draw ordnance, etc.
     }
 
-    function drawPlayer(id) {
-        grid.fillStyle = clientPlayers[id].color;
-
-        // FIXME: Clear old position if we don't use full clear/repaint cycles for performance reasons.
-        /*var playerX = clientPlayers[id].x;
-        var playerY = clientPlayers[id].y;
-        var playerSize = clientPlayers[id].size;
-        grid.clearRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);*/
-
-        // TODO: Verify that the next move is valid before allowing it.
-        clientPlayers[id].move();
-
-        var playerX = clientPlayers[id].x;
-        var playerY = clientPlayers[id].y;
-        var playerSize = clientPlayers[id].size;
-        // INTERPOLATE!
-        // ... to find playerX and playerY
-        grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
+    function drawPlayer(player) {
+        
 
         // The below code is the old code to paint the turrets on the tanks.
         /*grid.fillStyle = "#FFFFFF";

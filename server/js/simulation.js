@@ -3,25 +3,27 @@ var playerSize = 10;
 var playerSpeed = 1;
 var playerMaxHP = 3;
 
-var serverPlayers = {};
+var players = {};
 
 var boardWidth = 500;
 var boardHeight = 500;
 
+var Player = require("./player");
+
 exports.addNewPlayer = function(id) {
 	var position = _getRandomPosition();
-    var player = {
-            id: id,
-            x: position.x,
-            y: position.y,
-            orientation: position.orientation,
-            color: _getRandomColor(),
-            size: playerSize,
-            speed: playerSpeed,
-            maxHP: playerMaxHP
-        };
-	serverPlayers[id] = player;
-	return player;
+    var player = new Player(id);
+    player.setPosition(position.x, position.y, position.orientation);
+    player.setColor(_getRandomColor());
+    player.setSize(playerSize);
+    player.setSpeed(playerSpeed);
+    player.setMaxHP(playerMaxHP);
+
+	players[id] = player;
+}
+
+exports.removePlayer = function(id) {
+    delete(players[id]);
 }
 
 var _getRandomPosition = function() {

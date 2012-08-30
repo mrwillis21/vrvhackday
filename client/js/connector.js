@@ -7,10 +7,12 @@ Connector.prototype.connect = function() {
 	var self = this;
     window.WebSocket = window.WebSocket || window.MozWebSocket;
     var connectionURI = 'ws://' + this.url + ':' + this.port;
+    var connected = false;
     console.log("Connecting to " + connectionURI);
     this.connection = new WebSocket(connectionURI);
 
     this.connection.onopen = function (e) {
+        connected = true;
     	console.log("Connected to " + this.url);
     };
 
@@ -30,41 +32,22 @@ Connector.prototype.connect = function() {
             if(self.connectSuccess) {
             	self.connectSuccess(json);
             }
-        } else if (json.type === 'update') {
-        	if(self.boardUpdate) {
-            	self.boardUpdate(json);
-        	}
-        } else if (json.type === 'messages') { // entire message history
-            if(self.messages) {
-            	self.messages(json);
-            }
-        } else if (json.type === 'message') { // it's a single message
-            if(self.message) {
-            	self.message(json);
-            }
         }
     };
 
-    this.connection.onclose = function(e) {};
+    this.connection.onclose = function(e) {
+        connected = false;
+        console.log("Disconnected.");
+    };
 }
 
 Connector.prototype.sendMessage = function(message) {
-	this.connection.send(JSON.stringify(message));
+    if(this.connected) {
+	   this.connection.send(JSON.stringify(message));
+    }
 }
 
-Connector.prototype.onBoardUpdate = function(boardUpdateCallback) {
-	this.boardUpdate = boardUpdateCallback;
-}
-
-Connector.prototype.onConnectSuccess = function(connectSuccessCallback) {
+Connector.prototype.onConnect = function(connectSuccessCallback) {
 	this.connectSuccess = connectSuccessCallback;
-}
-
-Connector.prototype.onMessages = function(messagesCallback) {
-	this.messages = messagesCallback;
-}
-
-Connector.prototype.onMessage = function(messageCallback) {
-	this.message = messageCallback;
 }
 
