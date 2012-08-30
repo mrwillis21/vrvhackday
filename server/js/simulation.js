@@ -50,6 +50,7 @@ var _tick = function() {
 var _calculateWorldState = function() {
     // TODO: Calculate world snapshot
     var snapshot = {};
+    snapshot.players = players;
     if(calculate_callback) {
         calculate_callback(snapshot);
     }

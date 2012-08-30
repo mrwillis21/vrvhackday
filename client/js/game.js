@@ -12,36 +12,45 @@ $(function () {
     var clientID = -1;
     var boardSnapshots = [];
 
+    var acceptableKeys = [32, 37, 38, 39, 40];
+
     // This can live wherever in this file.
     var connector = new Connector("mwillis.pyxisit.com","1337"); // TODO: Set these values elsewhere.
     connector.onConnect(function(data) {
         clientID = data.id;
         console.log("Connected.");
     });
+    connector.onReceiveSnapshot(function(data) {
+        boardSnapshots.push(data.data);
+    });
     connector.connect(); 
 
     var animator = new Animator(drawBoardState).startAnimation();
     
     $(document).keydown(function(e) {
-        var message = new NetworkMessage("keyDown");
-        message.putData("id", clientID);
-        message.putData("keyCode", e.which);
-        connector.sendMessage(message);
+        if($.inArray(e.which, acceptableKeys) > -1) {
+            var message = new NetworkMessage("keyDown");
+            message.putData("id", clientID);
+            message.putData("keyCode", e.which);
+            connector.sendMessage(message);
+        }
     });
 
     $(document).keyup(function(e) {
-        var message = new NetworkMessage("keyUp");
-        message.putData("id", clientID);
-        message.putData("keyCode", e.which);
-        connector.sendMessage(message);
+        if($.inArray(e.which, acceptableKeys) > -1) {
+            var message = new NetworkMessage("keyUp");
+            message.putData("id", clientID);
+            message.putData("keyCode", e.which);
+            connector.sendMessage(message);
+        }
     });
 
     function drawBoardState() {
         // TODO: Grab latest board snapshot (list of players, bullets, etc.)
         // 
         grid.clearRect(0, 0, grid_canvas.width, grid_canvas.height);
-        var boardSnapshot = {}; // TODO: Get the board snapshot at now-75 ms with a loop. Drop off any snapshots that are older.
-        var players = boardSnapshot.players;
+        var boardSnapshot = boardSnapshots[0] || {snapshot: {players: {}}};//{}; // TODO: Get the board snapshot at now-75 ms with a loop. Drop off any snapshots that are older.
+        var players = boardSnapshot.snapshot.players;
         for(var playerID in players) {
             var player = players[playerID];
             grid.fillStyle = player.color;

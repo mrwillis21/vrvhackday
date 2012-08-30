@@ -16,7 +16,15 @@ var clients = {};
 var newPlayerID = -1;
 
 var sim = require('./simulation');
-sim.onCalculateWorldState(function() {
+sim.onCalculateWorldState(function(snapshot) {
+    var snapshotMessage = {};
+    snapshotMessage.type = "snapshot";
+    snapshotMessage.timestamp = new Date().getTime();
+    snapshotMessage.data = {
+        timestamp: snapshotMessage.timestamp,
+        snapshot: snapshot
+    };
+    _updateClients(snapshotMessage);
     //console.log("Calculating world state from the server!");
 });
 sim.startSimulation();

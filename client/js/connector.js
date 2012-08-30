@@ -21,16 +21,21 @@ Connector.prototype.connect = function() {
     this.connection.onmessage = function(message) {
     	// try to decode json (I assume that each message from server is json)
         try {
-            var json = JSON.parse(message.data);
+            var data = JSON.parse(message.data);
         } catch (e) {
-            console.log('This doesn\'t look like a valid JSON: ', message.data);
+            console.log("This doesn\'t look like valid JSON: ", message.data);
             return;
         }
         // handle incoming message
         
-        if (json.type === 'connectsuccess') {
+        if (data.type === "connectsuccess") {
             if(self.connect_callback) {
-            	self.connect_callback(json);
+            	self.connect_callback(data);
+            }
+        }
+        else if(data.type === "snapshot") {
+            if(self.snapshot_callback) {
+                self.snapshot_callback(data);
             }
         }
     };
@@ -49,5 +54,9 @@ Connector.prototype.sendMessage = function(message) {
 
 Connector.prototype.onConnect = function(callback) {
 	this.connect_callback = callback;
+}
+
+Connector.prototype.onReceiveSnapshot = function(callback) {
+    this.snapshot_callback = callback;
 }
 
