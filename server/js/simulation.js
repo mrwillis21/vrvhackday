@@ -18,7 +18,7 @@ exports.stopSimulation = function() {
 }
 
 exports.addNewPlayer = function(id) {
-    console.log("Adding player " + id);
+    console.log("Adding player " + id + " to simulation.");
     var position = _getRandomPosition();
     var player = new Player(id);
     player.setPosition(position.x, position.y, position.orientation);
@@ -31,7 +31,7 @@ exports.addNewPlayer = function(id) {
 }
 
 exports.removePlayer = function(id) {
-    console.log("Removing player " + id);
+    console.log("Removing player " + id + " from simulation.");
     delete(players[id]);
 }
 

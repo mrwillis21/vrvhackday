@@ -14,13 +14,9 @@ $(function () {
 
     // This can live wherever in this file.
     var connector = new Connector("mwillis.pyxisit.com","1337"); // TODO: Set these values elsewhere.
-    connector.onConnectSuccess(function(data) {
+    connector.onConnect(function(data) {
         clientID = data.id;
         console.log("Connected.");
-    });
-    connector.onBoardUpdate(function(data) {
-        console.log("Received update message from server...");
-        console.dir(data);
     });
     connector.connect(); 
 

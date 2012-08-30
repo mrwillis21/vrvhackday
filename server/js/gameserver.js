@@ -17,7 +17,7 @@ var newPlayerID = -1;
 
 var sim = require('./simulation');
 sim.onCalculateWorldState(function() {
-    console.log("Calculating world state from the server!");
+    //console.log("Calculating world state from the server!");
 });
 sim.startSimulation();
 
@@ -25,13 +25,14 @@ sim.startSimulation();
 wsServer.on('request', function(request) {
     var connection = request.accept(null, request.origin);
     
-    var requestIndex = ++newPlayerID;
-    clients[requestIndex] = connection;
-    sim.addNewPlayer(requestIndex);
+    var playerID = ++newPlayerID;
+    clients[playerID] = connection;
+    console.log("Player " + playerID + " logged into the game server.");
+    sim.addNewPlayer(playerID);
     
     var connectionData = {
     	type: "connectsuccess",
-        id: requestIndex
+        id: playerID
     };
 
     // Send initialization message.
@@ -65,9 +66,9 @@ wsServer.on('request', function(request) {
 
     connection.on('close', function(connection) {
             // remove user from the list of connected clients
-            delete(clients[requestIndex]);
-            sim.removePlayer(requestIndex);
-            console.log("Player " + requestIndex + " logged out.");
+            delete(clients[playerID]);
+            sim.removePlayer(playerID);
+            console.log("Player " + playerID + " logged out of the game server.");
     });
 });
 

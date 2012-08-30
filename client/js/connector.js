@@ -1,18 +1,18 @@
 var Connector = function(url, port) {
 	this.url = url;
 	this.port = port;
+    this.isConnected = false;
 }
 
 Connector.prototype.connect = function() {
 	var self = this;
     window.WebSocket = window.WebSocket || window.MozWebSocket;
     var connectionURI = 'ws://' + this.url + ':' + this.port;
-    var connected = false;
     console.log("Connecting to " + connectionURI);
     this.connection = new WebSocket(connectionURI);
 
     this.connection.onopen = function (e) {
-        connected = true;
+        self.isConnected = true;
     	console.log("Connected to " + this.url);
     };
 
@@ -29,25 +29,25 @@ Connector.prototype.connect = function() {
         // handle incoming message
         
         if (json.type === 'connectsuccess') {
-            if(self.connectSuccess) {
-            	self.connectSuccess(json);
+            if(self.connect_callback) {
+            	self.connect_callback(json);
             }
         }
     };
 
     this.connection.onclose = function(e) {
-        connected = false;
+        self.isConnected = false;
         console.log("Disconnected.");
     };
 }
 
 Connector.prototype.sendMessage = function(message) {
-    if(this.connected) {
+    if(this.isConnected) {
 	   this.connection.send(JSON.stringify(message));
     }
 }
 
-Connector.prototype.onConnect = function(connectSuccessCallback) {
-	this.connectSuccess = connectSuccessCallback;
+Connector.prototype.onConnect = function(callback) {
+	this.connect_callback = callback;
 }
 
