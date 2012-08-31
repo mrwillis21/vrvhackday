@@ -48,12 +48,8 @@ wsServer.on('request', function(request) {
     connection.on('message', function(data) {
         if (data.type === 'utf8') {
             var message = JSON.parse(data.utf8Data);
-            if(message.type === "keyDown") {
-                //console.log("Client " + message.data.id + " pressed key " + message.data.keyCode);
-                sim.key(message.data.id, message.timestamp, message.data.keyCode, "down");
-            }
-            else if(message.type === "keyUp") {
-                sim.key(message.data.id, message.timestamp, message.keyCode, "up");
+            if(message.type === "key") {
+                sim.key(message.data);
             }
             /*if(data.type === "statechange") {
                 var player = serverPlayers[data.player.id];

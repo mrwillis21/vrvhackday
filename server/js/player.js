@@ -36,20 +36,20 @@ Player.prototype.setSpeed = function(speed) {
 	this.speed = speed;
 }
 
-Player.prototype.move = function() {
+Player.prototype.move = function(distance) {
 	if(this.moving) {
 		// TODO: Verify legal move before moving. Should the entity take care of this or the board manager?
-		if(this.orientation === "U") {
-			this.y = this.y-this.speed;
+		if(this.orientation === 38) {
+			this.y = this.y-distance;
 		}
-		else if(this.orientation === "D") {
-			this.y = this.y+this.speed;
+		else if(this.orientation === 40) {
+			this.y = this.y+distance;
 		}
-		else if(this.orientation === "L") {
-			this.x = this.x-this.speed;
+		else if(this.orientation === 37) {
+			this.x = this.x-distance;
 		}
-		else if(this.orientation === "R") {
-			this.x = this.x+this.speed;
+		else if(this.orientation === 39) {
+			this.x = this.x+distance;
 		}
 	}
 }

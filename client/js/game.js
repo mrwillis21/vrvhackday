@@ -11,37 +11,44 @@ $(function () {
     
     var clientID = -1;
     var boardSnapshots = [];
-
     var acceptableKeys = [32, 37, 38, 39, 40];
 
-    // This can live wherever in this file.
+    // External utilities.
+    var animator = new Animator(drawBoardState);
     var connector = new Connector("mwillis.pyxisit.com","1337"); // TODO: Set these values elsewhere.
+
+    // This can live wherever in this file.
     connector.onConnect(function(data) {
         clientID = data.id;
         console.log("Connected.");
+        animator.startAnimation();
     });
     connector.onReceiveSnapshot(function(data) {
         //console.dir(data);
         boardSnapshots.push(data.data);
     });
     connector.connect(); 
-
-    var animator = new Animator(drawBoardState).startAnimation();
     
     $(document).keydown(function(e) {
+        var ts = new Date().getTime();
         if($.inArray(e.which, acceptableKeys) > -1) {
-            var message = new NetworkMessage("keyDown");
+            var message = new NetworkMessage("key");
             message.putData("id", clientID);
+            message.putData("timestamp", ts);
             message.putData("keyCode", e.which);
+            message.putData("direction", "down");
             connector.sendMessage(message);
         }
     });
 
     $(document).keyup(function(e) {
+        var ts = new Date().getTime();
         if($.inArray(e.which, acceptableKeys) > -1) {
-            var message = new NetworkMessage("keyUp");
+            var message = new NetworkMessage("key");
             message.putData("id", clientID);
+            message.putData("timestamp", ts);
             message.putData("keyCode", e.which);
+            message.putData("direction", "up");
             connector.sendMessage(message);
         }
     });
@@ -49,7 +56,7 @@ $(function () {
     // FIXME
     function drawBoardState() {
         var boardSnapshot1, boardSnapshot2;
-        var renderTime = new Date().getTime()-200;
+        var renderTime = new Date().getTime()-150;
         var unused = 0;
         for(var i = 1; i < boardSnapshots.length; ++i) {
             if(boardSnapshots[i].timestamp >= renderTime) {

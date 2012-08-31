@@ -4,8 +4,8 @@ var playerSpeed = 70;
 var playerMaxHP = 3;
 
 var players = {};
-var keyQ = {}
 var isSimulationRunning = false;
+var lastKeyPress = {};
 
 var Player = require("./player");
 
@@ -36,14 +36,25 @@ exports.removePlayer = function(id) {
     delete(players[id]);
 }
 
-exports.key = function(playerID, timestamp, keyCode, direction) {
-    if(!keyQ[playerID]) {
-        keyQ[playerID] = [];
-    }
-    var queue = keyQ[playerID];
-    var lastInput = queue[queue.length-1];
-    if(!lastInput || (lastInput.keyCode != keyCode && lastInput.direction != direction)) {
-        keyQ[playerID].push({timestamp: timestamp, keyCode: keyCode, direction: direction});
+exports.key = function(keyPress) {
+    var lastKey = lastKeyPress[keyPress.id];
+    if(!lastKey || lastKey.keyCode != keyPress.keyCode || lastKey.direction != keyPress.direction) {
+        var player = players[keyPress.id];
+        if(lastKey) {
+            if(lastKey.direction === "down") {
+                var distance = player.speed * ((keyPress.timestamp - lastKey.timestamp) / 1000);
+                player.move(distance);
+            }
+        }
+
+        if(keyPress.direction === "up") {
+            player.stopMoving(keyPress.keyCode);
+        }
+        else if(keyPress.direction === "down") {
+            player.startMoving(keyPress.keyCode);
+        }
+
+        lastKeyPress[keyPress.id] = keyPress;
     }
 }
 
@@ -63,36 +74,17 @@ var _tick = function() {
 
 // FIXME
 var _calculateWorldState = function() {
-    var now = new Date().getTime();
     for(var playerID in players) {
+        var lastKey = lastKeyPress[playerID];
         var player = players[playerID];
-        var x = player.x;
-        var y = player.y;
-        var orientation = player.orientation;
-
-        // TODO: handle keyUPs as well for stopping. However, ignore them if the previous keydown doesn't match.
-        pkq = keyQ[playerID];
-        if(pkq) {
-            for(var i = 0; i < pkq.length; ++i) {
-                var key = pkq[i];
-                var dir = key.direction;
-                var nextTimeStamp = now;
-                if(pkq[i+1]) {
-                    nextTimeStamp = pkq[i+1].timestamp;
-                }
-                if(dir === "down") {
-                    var distance = player.speed * ((nextTimeStamp - pkq[i].timestamp)/1000);
-                    _movePlayer(player, key.keyCode, distance); // TODO: Change this to a more multi-purpose function.
-                }
-                else if(dir === "up") {
-
-                }
+        if(lastKey) {
+            if(lastKey.direction === "down") {
+                var distance = player.speed * ((new Date().getTime() - lastKey.timestamp) / 1000);
+                player.move(distance);
             }
-            delete(keyQ[playerID]);
         }
     }
 
-    // TODO: Calculate world snapshot
     var snapshot = {};
     snapshot.players = players;
     if(calculate_callback) {
@@ -102,30 +94,10 @@ var _calculateWorldState = function() {
 
 // Helper functions
 
-var _movePlayer = function(player, keyCode, distance) {
-    // TODO: Orientation
-    if(keyCode === 37) {
-        // LEFT
-        player.x = player.x - distance;
-    }
-    else if(keyCode === 38) {
-        // UP
-        player.y = player.y - distance;
-    }
-    else if(keyCode === 39) {
-        // RIGHT
-        player.x = player.x + distance; 
-    }
-    else if(keyCode === 40) {
-        // DOWN
-        player.y = player.y + distance;
-    }
-}
-
 var _getRandomPosition = function() {
     // Change 200 to boardLeft + 1/2 of tank size
-    var x = (Math.floor(Math.random()*40) + 40);
-    var y = (Math.floor(Math.random()*40) + 40);
+    var x = (Math.floor(Math.random()*400));
+    var y = (Math.floor(Math.random()*400));
     var o = _getRandomOrientation();
     return {x: x, y: y, orientation: o};
 }
