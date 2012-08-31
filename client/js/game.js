@@ -21,6 +21,7 @@ $(function () {
         console.log("Connected.");
     });
     connector.onReceiveSnapshot(function(data) {
+        //console.dir(data);
         boardSnapshots.push(data.data);
     });
     connector.connect(); 
@@ -45,24 +46,44 @@ $(function () {
         }
     });
 
+    // FIXME
     function drawBoardState() {
-        // TODO: Grab latest board snapshot (list of players, bullets, etc.)
-        // 
-        grid.clearRect(0, 0, grid_canvas.width, grid_canvas.height);
-        var boardSnapshot = boardSnapshots[0] || {snapshot: {players: {}}};//{}; // TODO: Get the board snapshot at now-75 ms with a loop. Drop off any snapshots that are older.
-        var players = boardSnapshot.snapshot.players;
-        for(var playerID in players) {
-            var player = players[playerID];
-            grid.fillStyle = player.color;
-
-            var playerX = player.x;
-            var playerY = player.y;
-            var playerSize = player.size;
-            // INTERPOLATE!
-            // ... to find playerX and playerY
-            grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
+        var boardSnapshot1, boardSnapshot2;
+        var renderTime = new Date().getTime()-200;
+        var unused = 0;
+        for(var i = 1; i < boardSnapshots.length; ++i) {
+            if(boardSnapshots[i].timestamp >= renderTime) {
+                boardSnapshot1 = boardSnapshots[i-1].snapshot;
+                boardSnapshot1.timestamp = boardSnapshots[i-1].timestamp;
+                boardSnapshot2 = boardSnapshots[i].snapshot;
+                boardSnapshot2.timestamp = boardSnapshots[i].timestamp;
+                break;
+            }
+            else {
+                unused = i;
+            }
         }
-        // TODO: Draw ordnance, etc.
+        boardSnapshots.splice(0, unused);
+
+        if(boardSnapshot1 && boardSnapshot2) {
+            grid.clearRect(0, 0, grid_canvas.width, grid_canvas.height);
+            var players = boardSnapshot1.players;
+            var players2 = boardSnapshot2.players;
+            for(var playerID in players) {
+                var player = players[playerID];
+                var player2 = players2[playerID];
+                if(player && player2) {
+                    grid.fillStyle = player.color;
+                    // Linear interpolation for the win.
+                    var step = (renderTime - boardSnapshot1.timestamp)/(boardSnapshot2.timestamp - boardSnapshot1.timestamp);
+                    var playerX = player.x + ((player2.x - player.x) * step);
+                    var playerY = player.y + ((player2.y - player.y) * step);
+                    var playerSize = player.size;
+                    grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
+                }
+            }
+            // TODO: Draw ordnance, etc.
+        }
     }
 
     function drawPlayer(player) {

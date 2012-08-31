@@ -1,6 +1,6 @@
 var NetworkMessage = function(type) {
 	this.type = type;
-	this.timeStamp = new Date().getTime();
+	this.timestamp = new Date().getTime();
 	this.data = {};
 }
 

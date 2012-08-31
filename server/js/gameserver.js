@@ -25,7 +25,6 @@ sim.onCalculateWorldState(function(snapshot) {
         snapshot: snapshot
     };
     _updateClients(snapshotMessage);
-    //console.log("Calculating world state from the server!");
 });
 sim.startSimulation();
 
@@ -50,10 +49,11 @@ wsServer.on('request', function(request) {
         if (data.type === 'utf8') {
             var message = JSON.parse(data.utf8Data);
             if(message.type === "keyDown") {
-                console.log("Client " + message.data.id + " pressed key " + message.data.keyCode);
+                //console.log("Client " + message.data.id + " pressed key " + message.data.keyCode);
+                sim.key(message.data.id, message.timestamp, message.data.keyCode, "down");
             }
             else if(message.type === "keyUp") {
-                console.log("Client " + message.data.id + " released key " + message.data.keyCode);
+                sim.key(message.data.id, message.timestamp, message.keyCode, "up");
             }
             /*if(data.type === "statechange") {
                 var player = serverPlayers[data.player.id];
