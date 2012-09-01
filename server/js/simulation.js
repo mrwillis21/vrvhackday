@@ -47,6 +47,7 @@ exports.key = function(keyPress) {
             }
         }
 
+        // TODO: Only stop if the up directly follows a down of the same key.
         if(keyPress.direction === "up") {
             player.stopMoving(keyPress.keyCode);
         }
@@ -78,10 +79,12 @@ var _calculateWorldState = function() {
         var lastKey = lastKeyPress[playerID];
         var player = players[playerID];
         if(lastKey) {
+            var now = new Date().getTime();
             if(lastKey.direction === "down") {
-                var distance = player.speed * ((new Date().getTime() - lastKey.timestamp) / 1000);
+                var distance = player.speed * ((now - lastKey.timestamp) / 1000);
                 player.move(distance);
             }
+            lastKey.timestamp = now;
         }
     }
 
