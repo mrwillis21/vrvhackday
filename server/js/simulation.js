@@ -39,15 +39,15 @@ exports.removePlayer = function(id) {
 exports.key = function(keyPress) {
     var lastKey = lastKeyPress[keyPress.id];
     if(!lastKey || lastKey.keyCode != keyPress.keyCode || lastKey.direction != keyPress.direction) {
+            if(keyPress.direction === "up" && lastKey && lastKey.keyCode != keyPress.keyCode) {
+                return;
+            }
         var player = players[keyPress.id];
-        if(lastKey) {
-            if(lastKey.direction === "down") {
+        if(player.moving) {
                 var distance = player.speed * ((keyPress.timestamp - lastKey.timestamp) / 1000);
                 player.move(distance);
-            }
         }
 
-        // TODO: Only stop if the up directly follows a down of the same key.
         if(keyPress.direction === "up") {
             player.stopMoving(keyPress.keyCode);
         }

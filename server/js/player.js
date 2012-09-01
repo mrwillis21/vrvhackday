@@ -57,8 +57,10 @@ Player.prototype.move = function(distance) {
 Player.prototype.startMoving = function(orientation) {
 	// TODO: undefined = "U"?
 	// TODO: Acceleration/deceleration?
-	this.orientation = orientation;
-	this.moving = true;
+	if(!this.moving || this.orientation != orientation) {
+		this.orientation = orientation;
+		this.moving = true;
+	}
 }
 
 Player.prototype.stopMoving = function(orientation) {
