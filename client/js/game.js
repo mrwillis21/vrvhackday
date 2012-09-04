@@ -87,6 +87,30 @@ $(function () {
                     var playerY = player.y + ((player2.y - player.y) * step);
                     var playerSize = player.size;
                     grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
+
+                    var o = player2.orientation;
+                    if (o === 38) {
+                        grid.fillStyle = 'black';
+                        grid.fillRect(playerX-(playerSize/8),playerY-playerSize,playerSize/4,playerSize);
+                    } else if (o === 40) {
+                        grid.fillStyle = 'black';
+                        grid.fillRect(playerX-(playerSize/8),playerY,playerSize/4,playerSize);
+                    } else if (o === 37) {
+                        grid.fillStyle = 'black';
+                        grid.fillRect(playerX-playerSize,playerY-(playerSize/8),playerSize,playerSize/4);
+                    } else if (o === 39) {
+                        grid.fillStyle = 'black';
+                        grid.fillRect(playerX,playerY-(playerSize/8),playerSize,playerSize/4);
+                    }
+                    if (player.id === clientID) {
+                        grid.fillStyle = 'white';
+                        grid.beginPath();
+                        grid.arc(playerX,playerY,playerSize/4,0,Math.PI*2,true);
+                        grid.closePath();
+                        grid.fill();
+                    }
+                    grid.fillStyle = 'red';
+                    grid.fillRect(playerX-(player.size/2), playerY-(player.size/2)-1, player.size*(player.currentHP/player.maxHP), 1);
                 }
             }
             // TODO: Draw ordnance, etc.

@@ -110,6 +110,5 @@ var _getRandomColor = function() {
 }
 
 var _getRandomOrientation = function() {
-    var orientations = ["U", "D", "L", "R"];
-    return orientations[Math.floor(Math.random()*orientations.length)];
+    return Math.floor(Math.random()*4)+37;
 }
