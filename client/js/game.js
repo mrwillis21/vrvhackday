@@ -53,7 +53,7 @@ $(function () {
         }
     });
 
-    // FIXME
+    // FIXME - Break out into methods.
     function drawBoardState() {
         var boardSnapshot1, boardSnapshot2;
         var renderTime = new Date().getTime()-150;
@@ -73,9 +73,13 @@ $(function () {
         boardSnapshots.splice(0, unused);
 
         if(boardSnapshot1 && boardSnapshot2) {
+            $("#score").find("tr").remove();
+            $('#score').append('<tr><td>Name</td><td>Score</td><td>Health</td></tr>');
             grid.clearRect(0, 0, grid_canvas.width, grid_canvas.height);
             var players = boardSnapshot1.players;
             var players2 = boardSnapshot2.players;
+            var shots = boardSnapshot1.shots;
+            var shots2 = boardSnapshot2.shots;
             for(var playerID in players) {
                 var player = players[playerID];
                 var player2 = players2[playerID];
@@ -111,43 +115,30 @@ $(function () {
                     }
                     grid.fillStyle = 'red';
                     grid.fillRect(playerX-(player.size/2), playerY-(player.size/2)-1, player.size*(player.currentHP/player.maxHP), 1);
+
+                    $('#score').append('<tr><td><font color="' + player2.color + '">' + player2.name + '</font></td><td>' + player2.score + '</td><td>' + player2.hp + '</td></tr>');
+                }
+
+            }
+
+            // Bullets.
+            for(var shotID in shots) {
+                var shot = shots[shotID];
+                var shot2 = shots2[shotID];
+
+                if(shot && shot2) {
+                    var step = (renderTime - boardSnapshot1.timestamp)/(boardSnapshot2.timestamp - boardSnapshot1.timestamp);
+                    var shotX = shot.x + ((shot2.x - shot.x) * step);
+                    var shotY = shot.y + ((shot2.y - shot.y) * step);
+
+                    grid.fillStyle = 'black';
+                    grid.beginPath();
+                    grid.arc(shotX,shotY,2,0,Math.PI*2,true);
+                    grid.closePath();
+                    grid.fill();
                 }
             }
-            // TODO: Draw ordnance, etc.
         }
     }
 
-    function drawPlayer(player) {
-        
-
-        // The below code is the old code to paint the turrets on the tanks.
-        /*grid.fillStyle = "#FFFFFF";
-        grid.fillRect(oldPosition.x-(squareSize/2),oldPosition.y-(squareSize/2),squareSize,squareSize);
-        grid.fillStyle = players[id].color;
-        grid.fillRect(x-(squareSize/2),y-(squareSize/2),squareSize,squareSize);
-        if (o == "U") {
-            grid.fillStyle = 'black';
-            grid.fillRect(x-(squareSize/8),y-squareSize,squareSize/4,squareSize);
-        } else if (o == "D") {
-            grid.fillStyle = 'black';
-            grid.fillRect(x-(squareSize/8),y,squareSize/4,squareSize);
-        } else if (o == "L") {
-            grid.fillStyle = 'black';
-            grid.fillRect(x-squareSize,y-(squareSize/8),squareSize,squareSize/4);
-        } else if (o == "R") {
-            grid.fillStyle = 'black';
-            grid.fillRect(x,y-(squareSize/8),squareSize,squareSize/4);
-        }
-        if (id === clientID) {
-            grid.fillStyle = 'white';
-            grid.beginPath();
-            grid.arc(x,y,2,0,Math.PI*2,true);
-            grid.closePath();
-            grid.fill();
-        }
-        grid.fillStyle = 'red';
-        grid.fillRect(x-(squareSize/2), y-(squareSize/2)-1, squareSize*(players[id].hp/maxHealth), 1);*/
-    }
-
-    // Game board class to maintain board state, and handle bounds, and possibly obstacles later.
 });

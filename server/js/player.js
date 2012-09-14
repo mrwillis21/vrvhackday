@@ -1,5 +1,6 @@
 var Player = function(id) {
 	this.id = id;
+	this.name = "New Player";
 	this.x = 0;
 	this.y = 0;
 	this.orientation = 38;
@@ -10,6 +11,11 @@ var Player = function(id) {
 	this.canFire = true;
 	this.moving = false;
 	this.speed = 1;
+	this.score = 0;
+}
+
+Player.prototype.setName = function(name) {
+	this.name = name;
 }
 
 Player.prototype.setPosition = function(x, y, orientation) {
