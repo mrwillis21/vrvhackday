@@ -51,20 +51,6 @@ wsServer.on('request', function(request) {
             if(message.type === "key") {
                 sim.key(message.data);
             }
-            /*if(data.type === "statechange") {
-                var player = serverPlayers[data.player.id];
-                if(player) {
-                    player.id = data.player.id;
-                    player.color = data.player.color;
-                    player.x = data.player.x;
-                    player.y = data.player.y;
-                    player.orientation = data.player.orientation;
-                    player.size = data.player.size;
-                    player.speed = data.player.speed;
-                    player.maxHP = data.player.maxHP;
-                }
-            }
-            _updateClients({type: "update", players: serverPlayers}); // TODO: Fill out a full, proper boardState object.*/
         }
     });
 

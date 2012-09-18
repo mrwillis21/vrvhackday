@@ -52,6 +52,10 @@ exports.key = function(keyPress) {
         _fireBullet(keyPress);
         return;
     }
+    else if(keyPress.keyCode == 13 && keyPress.direction == "down") {
+        _setPlayerName(keyPress);
+        return;
+    }
     var playerID = keyPress.id;
 
 
@@ -69,6 +73,10 @@ exports.key = function(keyPress) {
         var player = players[keyPress.id];
         if(player.moving) {
                 var distance = player.speed * ((keyPress.timestamp - lastKey.timestamp) / 1000);
+                var distanceToWall = _getDistanceToWall(player);
+                if(distanceToWall < distance) {
+                    distance = distanceToWall;
+                }
                 player.move(distance);
             }
 
@@ -106,6 +114,10 @@ var _calculateWorldState = function() {
             var now = new Date().getTime();
             if(lastKey.direction === "down") {
                 var distance = player.speed * ((now - lastKey.timestamp) / 1000);
+                var distanceToWall = _getDistanceToWall(player);
+                if(distanceToWall < distance) {
+                    distance = distanceToWall;
+                }
                 player.move(distance);
             }
             lastKey.timestamp = now;
@@ -134,8 +146,8 @@ var _calculateWorldState = function() {
 
 var _getRandomPosition = function() {
     // Change 200 to boardLeft + 1/2 of tank size
-    var x = (Math.floor(Math.random()*400));
-    var y = (Math.floor(Math.random()*400));
+    var x = (Math.floor(Math.random()*400)+playerSize);
+    var y = (Math.floor(Math.random()*400)+playerSize);
     var o = _getRandomOrientation();
     return {x: x, y: y, orientation: o};
 }
@@ -152,13 +164,33 @@ var _movePlayer = function(player, orientation, distance) {
 
 }
 
+var _getDistanceToWall = function(player) {
+    var orientation = player.orientation;
+    if(orientation === 38) {
+        return player.y - player.size;
+    }
+    else if(orientation === 40) {
+        return 500 - player.y - player.size; // FIXME - we need to standardize on board size.
+    }
+    else if(orientation === 37) {
+        return player.x - player.size;
+    }
+    else if(orientation === 39) {
+        return 500 - player.x - player.size; // FIXME - we need to standardize on board size.
+    }
+}
+
 var _fireBullet = function(keyPress) {
+    var now = new Date().getTime();
     var player = players[keyPress.id];
-    var shot = new Shot(player.id);
-    shot.setPosition(player.x, player.y);
-    shot.setOrientation(player.orientation);
-    shot.setSpeed(200); // TODO: Determine speed based on bullet type.
-    shots[shot.id] = shot;
+    if(now - player.lastShotTime > player.shotDelay) {
+        player.lastShotTime = now;
+        var shot = new Shot(player.id);
+        shot.setPosition(player.x, player.y);
+        shot.setOrientation(player.orientation);
+        shot.setSpeed(200); // TODO: Determine speed based on bullet type.
+        shots[shot.id] = shot;
+    }
 }
 
 var _checkForBulletCollisions = function(shot) {
@@ -215,4 +247,14 @@ var _damagePlayer = function(player, shot) {
         players[shot.playerID].score++;
     }
     delete(shots[shot.id]);
+}
+
+var _setPlayerName = function(keyPress) {
+    var player = players[keyPress.id];
+    if(keyPress.name) {
+        // Naive XSS check.
+        if(keyPress.name.indexOf("<") == -1 && keyPress.name.indexOf(">") == -1) {
+            player.setName(keyPress.name);
+        }
+    }
 }

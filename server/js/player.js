@@ -12,6 +12,8 @@ var Player = function(id) {
 	this.moving = false;
 	this.speed = 1;
 	this.score = 0;
+	this.shotDelay = 400; // In milliseconds.
+	this.lastShotTime = 0;
 }
 
 Player.prototype.setName = function(name) {

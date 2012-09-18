@@ -41,6 +41,21 @@ $(function () {
         }
     });
 
+    input.keydown(function(e) {
+        var ts = new Date().getTime();
+        var value = input.val();
+        if(e.which === 13 && value) {
+            var message = new NetworkMessage("key");
+            message.putData("id", clientID);
+            message.putData("timestamp", ts);
+            message.putData("keyCode", e.which);
+            message.putData("direction", "down");
+            message.putData("name", value);
+            connector.sendMessage(message);
+            input.val("");
+        }
+    });
+
     $(document).keyup(function(e) {
         var ts = new Date().getTime();
         if($.inArray(e.which, acceptableKeys) > -1) {
@@ -73,8 +88,8 @@ $(function () {
         boardSnapshots.splice(0, unused);
 
         if(boardSnapshot1 && boardSnapshot2) {
-            $("#score").find("tr").remove();
-            $('#score').append('<tr><td>Name</td><td>Score</td><td>Health</td></tr>');
+            score.find("tr").remove();
+            score.append('<tr><td>Name</td><td>Score</td><td>Health</td></tr>');
             grid.clearRect(0, 0, grid_canvas.width, grid_canvas.height);
             var players = boardSnapshot1.players;
             var players2 = boardSnapshot2.players;
@@ -116,7 +131,7 @@ $(function () {
                     grid.fillStyle = 'red';
                     grid.fillRect(playerX-(player.size/2), playerY-(player.size/2)-1, player.size*(player.currentHP/player.maxHP), 1);
 
-                    $('#score').append('<tr><td><font color="' + player2.color + '">' + player2.name + '</font></td><td>' + player2.score + '</td><td>' + player2.hp + '</td></tr>');
+                    score.append('<tr><td><font color="' + player2.color + '">' + player2.name + '</font></td><td>' + player2.score + '</td><td>' + player2.hp + '</td></tr>');
                 }
 
             }
