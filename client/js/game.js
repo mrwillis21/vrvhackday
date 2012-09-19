@@ -134,7 +134,7 @@ $(function () {
                     grid.fillStyle = 'red';
                     grid.fillRect(playerX-(player.size/2), playerY-(player.size/2)-1, player.size*(player.currentHP/player.maxHP), 1);
 
-                    score.append('<tr><td><font color="' + player2.color + '">' + player2.name + '</font></td><td>' + player2.score + '</td><td>' + player2.hp + '</td></tr>');
+                    score.append('<tr><td><font color="' + player2.color + '">' + player2.name + '</font></td><td>' + player2.score + '</td><td>' + player2.currentHP + '</td></tr>');
                 }
 
             }

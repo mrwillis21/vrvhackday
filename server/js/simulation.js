@@ -5,6 +5,7 @@ var tickInterval = 100;
 var playerSize = 10;
 var playerSpeed = 70;
 var playerMaxHP = 3;
+var boardSize = 500;
 
 var players = {};
 var shots = {};
@@ -139,8 +140,11 @@ var _calculateWorldState = function() {
     for(var shotID in shots) {
         var shot = shots[shotID];
         shot.move(tickInterval);
-        // FIXME: We need to keep the last snapshot and interpolate from it in order to do this properly.
         _checkForBulletCollisions(shot);
+        // Remove shots that have traveled off the board.
+        if(shot.x < 0 || shot.x > boardSize || shot.y < 0 || shot.y > boardSize) {
+            delete(shots[shotID]);
+        }
     }
 
     var snapshot = {};
@@ -157,7 +161,6 @@ var _calculateWorldState = function() {
 // Helper functions
 
 var _getRandomPosition = function() {
-    // Change 200 to boardLeft + 1/2 of tank size
     var x = (Math.floor(Math.random()*400)+playerSize);
     var y = (Math.floor(Math.random()*400)+playerSize);
     var o = _getRandomOrientation();
@@ -190,13 +193,13 @@ var _getDistanceToWall = function(player) {
         return player.y - player.size;
     }
     else if(orientation === 40) {
-        return 500 - player.y - player.size; // FIXME - we need to standardize on board size.
+        return boardSize - player.y - player.size; // FIXME - we need to standardize on board size.
     }
     else if(orientation === 37) {
         return player.x - player.size;
     }
     else if(orientation === 39) {
-        return 500 - player.x - player.size; // FIXME - we need to standardize on board size.
+        return boardSize - player.x - player.size; // FIXME - we need to standardize on board size.
     }
 }
 
