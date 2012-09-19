@@ -45,6 +45,11 @@ exports.removePlayer = function(id) {
     delete(players[id]);
     delete(moveBuffers[id]);
     // Delete any shots fired by said player.
+    for(shotID in shots) {
+        if(shots[shotID].playerID == id) {
+            delete(shots[shotID]);
+        }
+    }
 }
 
 exports.keyPress = function(keyPress) {
@@ -76,6 +81,13 @@ exports.keyUp = function(keyPress) {
             }
         }
     }
+    else if(keyPress.keyCode == 32) {
+        var playerID = keyPress.id;
+        var player = players[playerID];
+        if(player) {
+            player.shotLock = false;
+        }
+    }
 }
 
 exports.keyDown = function(keyPress) {
@@ -101,11 +113,8 @@ exports.keyDown = function(keyPress) {
     }
     else if(keyPress.keyCode == 32) {
         _fireBullet(keyPress);
-        return;
     }
 }
-
-
 
 exports.onCalculateWorldState = function(callback) {
     calculate_callback = callback;
@@ -206,13 +215,14 @@ var _getDistanceToWall = function(player) {
 var _fireBullet = function(keyPress) {
     var now = new Date().getTime();
     var player = players[keyPress.id];
-    if(now - player.lastShotTime > player.shotDelay) {
+    if(!player.shotLock && now - player.lastShotTime > player.shotDelay) {
         player.lastShotTime = now;
         var shot = new Shot(player.id);
         shot.setPosition(player.x, player.y);
         shot.setOrientation(player.orientation);
         shot.setSpeed(200); // TODO: Determine speed based on bullet type.
         shots[shot.id] = shot;
+        player.shotLock = true;
     }
 }
 

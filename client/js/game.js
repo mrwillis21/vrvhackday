@@ -11,7 +11,7 @@ $(function () {
     
     var clientID = -1;
     var boardSnapshots = [];
-    var acceptableKeys = [37, 38, 39, 40];
+    var acceptableKeys = [32, 37, 38, 39, 40];
 
     // External utilities.
     var animator = new Animator(drawBoardState);
@@ -32,13 +32,6 @@ $(function () {
     $(document).keydown(function(e) {
         var ts = new Date().getTime();
         if($.inArray(e.which, acceptableKeys) > -1) {
-            var message = new NetworkMessage("keyDown");
-            message.putData("id", clientID);
-            message.putData("timestamp", ts);
-            message.putData("keyCode", e.which);
-            connector.sendMessage(message);
-        }
-        else if(e.which === 32) { // SPACE BAR
             var message = new NetworkMessage("keyDown");
             message.putData("id", clientID);
             message.putData("timestamp", ts);
