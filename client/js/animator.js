@@ -10,23 +10,26 @@ window.requestAnimFrame = (function(){
           };
 })();
 
-var Animator = function(drawFunction) {
-    this.draw = drawFunction;
-    this.isStopped = true;
-}
+var Animator;
+(function() {
+  Animator = function(drawFunction) {
+      this.draw = drawFunction;
+      this.isStopped = true;
+  }
 
-Animator.prototype.animate = function() {
-    this.draw();
-    if(!this.isStopped) {
-        requestAnimFrame(this.animate.bind(this));
-    }
-}
+  Animator.prototype.animate = function() {
+      this.draw();
+      if(!this.isStopped) {
+          requestAnimFrame(this.animate.bind(this));
+      }
+  }
 
-Animator.prototype.startAnimation = function() {
-    this.isStopped = false;
-    this.animate();
-}
+  Animator.prototype.startAnimation = function() {
+      this.isStopped = false;
+      this.animate();
+  }
 
-Animator.prototype.stopAnimation = function() {
-    this.isStopped = true;
-}
+  Animator.prototype.stopAnimation = function() {
+      this.isStopped = true;
+  }
+})();

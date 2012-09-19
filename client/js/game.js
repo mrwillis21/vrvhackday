@@ -11,7 +11,7 @@ $(function () {
     
     var clientID = -1;
     var boardSnapshots = [];
-    var acceptableKeys = [32, 37, 38, 39, 40];
+    var acceptableKeys = [37, 38, 39, 40];
 
     // External utilities.
     var animator = new Animator(drawBoardState);
@@ -32,39 +32,42 @@ $(function () {
     $(document).keydown(function(e) {
         var ts = new Date().getTime();
         if($.inArray(e.which, acceptableKeys) > -1) {
-            var message = new NetworkMessage("key");
+            var message = new NetworkMessage("keyDown");
             message.putData("id", clientID);
             message.putData("timestamp", ts);
             message.putData("keyCode", e.which);
-            message.putData("direction", "down");
             connector.sendMessage(message);
         }
-    });
-
-    input.keydown(function(e) {
-        var ts = new Date().getTime();
-        var value = input.val();
-        if(e.which === 13 && value) {
-            var message = new NetworkMessage("key");
+        else if(e.which === 32) { // SPACE BAR
+            var message = new NetworkMessage("keyDown");
             message.putData("id", clientID);
             message.putData("timestamp", ts);
             message.putData("keyCode", e.which);
-            message.putData("direction", "down");
-            message.putData("name", value);
             connector.sendMessage(message);
-            input.val("");
         }
     });
 
     $(document).keyup(function(e) {
         var ts = new Date().getTime();
         if($.inArray(e.which, acceptableKeys) > -1) {
-            var message = new NetworkMessage("key");
+            var message = new NetworkMessage("keyUp");
             message.putData("id", clientID);
             message.putData("timestamp", ts);
             message.putData("keyCode", e.which);
-            message.putData("direction", "up");
             connector.sendMessage(message);
+        }
+    });
+
+    input.keydown(function(e) {
+        var ts = new Date().getTime();
+        if(e.which === 13 && input.val()) {
+            var message = new NetworkMessage("keyDown");
+            message.putData("id", clientID);
+            message.putData("timestamp", ts);
+            message.putData("keyCode", e.which);
+            message.putData("name", input.val());
+            connector.sendMessage(message);
+            input.val("");
         }
     });
 

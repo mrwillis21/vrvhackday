@@ -48,8 +48,14 @@ wsServer.on('request', function(request) {
     connection.on('message', function(data) {
         if (data.type === 'utf8') {
             var message = JSON.parse(data.utf8Data);
-            if(message.type === "key") {
-                sim.key(message.data);
+            if(message.type === "keyUp") {
+                sim.keyUp(message.data);
+            }
+            else if(message.type === "keyDown") {
+                sim.keyDown(message.data);
+            }
+            else if(message.type === "keyPress") {
+                sim.keyPress(message.data);
             }
         }
     });

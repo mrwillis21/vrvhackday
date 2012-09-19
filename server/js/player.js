@@ -1,9 +1,11 @@
+var Enums = require("../../shared/js/enums");
+
 var Player = function(id) {
 	this.id = id;
 	this.name = "New Player";
 	this.x = 0;
 	this.y = 0;
-	this.orientation = 38;
+	this.orientation = Enums.Orientations.UP;
 	this.color = "#000000";
 	this.size = 10;
 	this.maxHP = 3;
@@ -47,24 +49,22 @@ Player.prototype.setSpeed = function(speed) {
 Player.prototype.move = function(distance) {
 	if(this.moving) {
 		// TODO: Verify legal move before moving. Should the entity take care of this or the board manager?
-		if(this.orientation === 38) {
+		if(this.orientation === Enums.Orientations.UP) {
 			this.y = this.y-distance;
 		}
-		else if(this.orientation === 40) {
+		else if(this.orientation === Enums.Orientations.DOWN) {
 			this.y = this.y+distance;
 		}
-		else if(this.orientation === 37) {
+		else if(this.orientation === Enums.Orientations.LEFT) {
 			this.x = this.x-distance;
 		}
-		else if(this.orientation === 39) {
+		else if(this.orientation === Enums.Orientations.RIGHT) {
 			this.x = this.x+distance;
 		}
 	}
 }
 
 Player.prototype.startMoving = function(orientation) {
-	// TODO: undefined = "U"?
-	// TODO: Acceleration/deceleration?
 	if(!this.moving || this.orientation != orientation) {
 		this.orientation = orientation;
 		this.moving = true;

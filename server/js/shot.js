@@ -1,3 +1,5 @@
+var Enums = require("../../shared/js/enums");
+
 var nextShotID = -1;
 
 var Shot = function(playerID) {
@@ -30,16 +32,16 @@ Shot.prototype.setSpeed = function(speed) {
 
 Shot.prototype.move = function(timeElapsed) {
 	var distance = this.speed * (timeElapsed / 1000);
-	if(this.orientation === 38) {
+	if(this.orientation === Enums.Orientations.UP) {
 		this.y = this.y-distance;
 	}
-	else if(this.orientation === 40) {
+	else if(this.orientation === Enums.Orientations.DOWN) {
 		this.y = this.y+distance;
 	}
-	else if(this.orientation === 37) {
+	else if(this.orientation === Enums.Orientations.LEFT) {
 		this.x = this.x-distance;
 	}
-	else if(this.orientation === 39) {
+	else if(this.orientation === Enums.Orientations.RIGHT) {
 		this.x = this.x+distance;
 	}
 }

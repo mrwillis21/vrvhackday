@@ -10,9 +10,9 @@ var players = {};
 var shots = {};
 
 var lastWorldSnapshot = {};
-var moveBuffer = {};
-var lastKeyPress = {};
+var moveBuffers = {};
 
+var Enums = require("../../shared/js/enums");
 var Player = require("./player");
 var Shot = require("./shot");
 
@@ -36,58 +36,71 @@ exports.addNewPlayer = function(id) {
     player.setMaxHP(playerMaxHP);
 
     players[id] = player;
-    moveBuffer[id] = [];
-    lastKeyPress[id];
+    moveBuffers[id] = [];
 }
 
 exports.removePlayer = function(id) {
     console.log("Removing player " + id + " from simulation.");
     delete(players[id]);
-    delete(moveBuffer[id]);
+    delete(moveBuffers[id]);
     // Delete any shots fired by said player.
 }
 
-exports.key = function(keyPress) {
-    if(keyPress.keyCode == 32 && keyPress.direction == "down") {
+exports.keyPress = function(keyPress) {
+}
+
+exports.keyUp = function(keyPress) {
+    if(keyPress.keyCode == Enums.Orientations.UP ||
+        keyPress.keyCode == Enums.Orientations.DOWN ||
+        keyPress.keyCode == Enums.Orientations.LEFT ||
+        keyPress.keyCode == Enums.Orientations.RIGHT) {
+
+        var playerID = keyPress.id;
+
+        var player = players[playerID];
+        var moveBuffer = moveBuffers[playerID];
+        if(player && moveBuffer) { // If not, something's gone off the rails.
+            var lastKeyPress = moveBuffer[moveBuffer.length - 1]; // FIXME: Could return undefined.
+            _movePlayer(keyPress, lastKeyPress);
+            player.stopMoving(keyPress.keyCode);
+            for(var i = moveBuffer.length - 1; i >= 0; i--) {
+                if(moveBuffer[i].keyCode == keyPress.keyCode) {
+                    moveBuffer.splice(i, 1);
+                }
+            }
+            if(moveBuffer.length > 0) {
+                var lastKeyPress = moveBuffer[moveBuffer.length - 1];
+                lastKeyPress.timestamp = new Date().getTime();
+                player.startMoving(lastKeyPress.keyCode);
+            }
+        }
+    }
+}
+
+exports.keyDown = function(keyPress) {
+    if(keyPress.keyCode == Enums.Orientations.UP ||
+        keyPress.keyCode == Enums.Orientations.DOWN ||
+        keyPress.keyCode == Enums.Orientations.LEFT ||
+        keyPress.keyCode == Enums.Orientations.RIGHT) {
+
+        var playerID = keyPress.id;
+
+        var player = players[playerID];
+        var moveBuffer = moveBuffers[playerID];
+        if(player && moveBuffer) { // If not, something's gone off the rails.
+            var lastKeyPress = moveBuffer[moveBuffer.length - 1]; // FIXME: Could return undefined.
+            _movePlayer(keyPress, lastKeyPress);
+            player.startMoving(keyPress.keyCode);
+            // Add the movement to the move buffer. FIXME: This will add auto-repeat presses as well.
+            moveBuffer.push(keyPress);
+        }
+    }
+    else if(keyPress.keyCode == 13 && keyPress.name) {
+        _setPlayerName(keyPress);
+    }
+    else if(keyPress.keyCode == 32) {
         _fireBullet(keyPress);
         return;
-    }
-    else if(keyPress.keyCode == 13 && keyPress.direction == "down") {
-        _setPlayerName(keyPress);
-        return;
-    }
-    var playerID = keyPress.id;
-
-
-
-    /*if(keyPress.direction == "down") {
-        // Push to the input buffer.
-        moveBuffer[playerID].push(keyPress);
-        player.startMoving(keyPress.keyCode);
-    }*/
-    var lastKey = lastKeyPress[keyPress.id];
-    if(!lastKey || lastKey.keyCode != keyPress.keyCode || lastKey.direction != keyPress.direction) {
-            if(keyPress.direction === "up" && lastKey && lastKey.keyCode != keyPress.keyCode) {
-                return;
-            }
-        var player = players[keyPress.id];
-        if(player.moving) {
-                var distance = player.speed * ((keyPress.timestamp - lastKey.timestamp) / 1000);
-                var distanceToWall = _getDistanceToWall(player);
-                if(distanceToWall < distance) {
-                    distance = distanceToWall;
-                }
-                player.move(distance);
-            }
-
-        if(keyPress.direction === "up") {
-            player.stopMoving(keyPress.keyCode);
-        }
-        else if(keyPress.direction === "down") {
-            player.startMoving(keyPress.keyCode);
-        }
-
-        lastKeyPress[keyPress.id] = keyPress;
     }
 }
 
@@ -108,19 +121,18 @@ var _tick = function() {
 // FIXME
 var _calculateWorldState = function() {
     for(var playerID in players) {
-        var lastKey = lastKeyPress[playerID];
+        var moveBuffer = moveBuffers[playerID];
+        var lastKeyPress = moveBuffer[moveBuffer.length - 1];
         var player = players[playerID];
-        if(lastKey) {
+        if(lastKeyPress) {
             var now = new Date().getTime();
-            if(lastKey.direction === "down") {
-                var distance = player.speed * ((now - lastKey.timestamp) / 1000);
-                var distanceToWall = _getDistanceToWall(player);
-                if(distanceToWall < distance) {
-                    distance = distanceToWall;
-                }
-                player.move(distance);
+            var distance = player.speed * ((now - lastKeyPress.timestamp) / 1000);
+            var distanceToWall = _getDistanceToWall(player);
+            if(distanceToWall < distance) {
+                distance = distanceToWall;
             }
-            lastKey.timestamp = now;
+            player.move(distance);
+            lastKeyPress.timestamp = now;
         }
     }
 
@@ -160,8 +172,16 @@ var _getRandomOrientation = function() {
     return Math.floor(Math.random()*4)+37;
 }
 
-var _movePlayer = function(player, orientation, distance) {
-
+var _movePlayer = function(keyPress, lastKeyPress) {
+    var player = players[keyPress.id];
+    if(keyPress && lastKeyPress && player.moving) {
+        var distance = player.speed * ((keyPress.timestamp - lastKeyPress.timestamp) / 1000);
+        var distanceToWall = _getDistanceToWall(player);
+        if(distanceToWall < distance) {
+            distance = distanceToWall;
+        }
+        player.move(distance);
+    }
 }
 
 var _getDistanceToWall = function(player) {
