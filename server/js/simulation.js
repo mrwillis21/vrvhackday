@@ -9,6 +9,7 @@ var boardSize = 500;
 
 var players = {};
 var shots = {};
+var deathTimers = {};
 
 var lastWorldSnapshot = {};
 var moveBuffers = {};
@@ -131,9 +132,13 @@ var _tick = function() {
 // FIXME
 var _calculateWorldState = function() {
     for(var playerID in players) {
+        var player = players[playerID];
+        if(deathTimers[playerID] && (new Date().getTime() > (deathTimers[playerID] + player.respawnDelay))) {
+            player.alive = true;
+            delete(deathTimers[playerID]);
+        }
         var moveBuffer = moveBuffers[playerID];
         var lastKeyPress = moveBuffer[moveBuffer.length - 1];
-        var player = players[playerID];
         if(lastKeyPress) {
             var now = new Date().getTime();
             var distance = player.speed * ((now - lastKeyPress.timestamp) / 1000);
@@ -274,6 +279,8 @@ var _checkForBulletCollisionWithPlayer = function(playerID, shot) {
 var _damagePlayer = function(player, shot) {
     player.currentHP = player.currentHP - shot.damage;
     if(player.currentHP <= 0) {
+        deathTimers[player.id] = new Date().getTime();
+        player.alive = false;
         player.currentHP = player.maxHP;
         var pos = _getRandomPosition();
         player.setPosition(pos.x, pos.y, pos.orientation);

@@ -95,37 +95,40 @@ $(function () {
                 var player = players[playerID];
                 var player2 = players2[playerID];
                 if(player && player2) {
-                    grid.fillStyle = player.color;
-                    // Linear interpolation for the win.
-                    var step = (renderTime - boardSnapshot1.timestamp)/(boardSnapshot2.timestamp - boardSnapshot1.timestamp);
-                    var playerX = player.x + ((player2.x - player.x) * step);
-                    var playerY = player.y + ((player2.y - player.y) * step);
-                    var playerSize = player.size;
-                    grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
+                    console.log(player.alive);
+                    if(player2.alive) {
+                        grid.fillStyle = player.color;
+                        // Linear interpolation for the win.
+                        var step = (renderTime - boardSnapshot1.timestamp)/(boardSnapshot2.timestamp - boardSnapshot1.timestamp);
+                        var playerX = player.x + ((player2.x - player.x) * step);
+                        var playerY = player.y + ((player2.y - player.y) * step);
+                        var playerSize = player.size;
+                        grid.fillRect(playerX-(playerSize/2), playerY-(playerSize/2), playerSize, playerSize);
 
-                    var o = player2.orientation;
-                    if (o === 38) {
-                        grid.fillStyle = 'black';
-                        grid.fillRect(playerX-(playerSize/8),playerY-playerSize,playerSize/4,playerSize);
-                    } else if (o === 40) {
-                        grid.fillStyle = 'black';
-                        grid.fillRect(playerX-(playerSize/8),playerY,playerSize/4,playerSize);
-                    } else if (o === 37) {
-                        grid.fillStyle = 'black';
-                        grid.fillRect(playerX-playerSize,playerY-(playerSize/8),playerSize,playerSize/4);
-                    } else if (o === 39) {
-                        grid.fillStyle = 'black';
-                        grid.fillRect(playerX,playerY-(playerSize/8),playerSize,playerSize/4);
+                        var o = player2.orientation;
+                        if (o === 38) {
+                            grid.fillStyle = 'black';
+                            grid.fillRect(playerX-(playerSize/8),playerY-playerSize,playerSize/4,playerSize);
+                        } else if (o === 40) {
+                            grid.fillStyle = 'black';
+                            grid.fillRect(playerX-(playerSize/8),playerY,playerSize/4,playerSize);
+                        } else if (o === 37) {
+                            grid.fillStyle = 'black';
+                            grid.fillRect(playerX-playerSize,playerY-(playerSize/8),playerSize,playerSize/4);
+                        } else if (o === 39) {
+                            grid.fillStyle = 'black';
+                            grid.fillRect(playerX,playerY-(playerSize/8),playerSize,playerSize/4);
+                        }
+                        if (player.id === clientID) {
+                            grid.fillStyle = 'white';
+                            grid.beginPath();
+                            grid.arc(playerX,playerY,playerSize/4,0,Math.PI*2,true);
+                            grid.closePath();
+                            grid.fill();
+                        }
+                        grid.fillStyle = 'red';
+                        grid.fillRect(playerX-(player.size/2), playerY-(player.size/2)-1, player.size*(player.currentHP/player.maxHP), 1);
                     }
-                    if (player.id === clientID) {
-                        grid.fillStyle = 'white';
-                        grid.beginPath();
-                        grid.arc(playerX,playerY,playerSize/4,0,Math.PI*2,true);
-                        grid.closePath();
-                        grid.fill();
-                    }
-                    grid.fillStyle = 'red';
-                    grid.fillRect(playerX-(player.size/2), playerY-(player.size/2)-1, player.size*(player.currentHP/player.maxHP), 1);
 
                     score.append('<tr><td><font color="' + player2.color + '">' + player2.name + '</font></td><td>' + player2.score + '</td><td>' + player2.currentHP + '</td></tr>');
                 }

@@ -16,7 +16,8 @@ var Player = function(id) {
 	this.score = 0;
 	this.shotDelay = 400; // In milliseconds.
 	this.lastShotTime = 0;
-	this.respawnDelay = 5000; // In milliseconds.
+	this.alive = true;
+	this.respawnDelay = 2000; // In milliseconds.
 	this.shotLock = false;
 }
 
